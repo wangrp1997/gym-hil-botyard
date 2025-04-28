@@ -1,6 +1,6 @@
 import gymnasium as gymnasium
 from gym_franka.mujoco_gym_env import GymRenderingSpec, MujocoGymEnv
-from gym_franka.viewer_wrapper import PassiveViewerWrapper
+from gym_franka.wrappers.viewer_wrapper import PassiveViewerWrapper
 
 __all__ = [
     "MujocoGymEnv",

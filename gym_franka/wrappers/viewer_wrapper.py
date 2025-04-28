@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gymnasium as gym
 import mujoco
+import mujoco.viewer
 
 
 class PassiveViewerWrapper(gym.Wrapper):

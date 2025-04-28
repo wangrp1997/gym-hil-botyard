@@ -23,9 +23,9 @@ import imageio
 import gymnasium as gym
 import numpy as np
 
-import franka_sim
+import gym_franka
 
-env = gym.make("PandaPickCubeVision-v0", render_mode="human", image_obs=True)
+env = gym.make("gym_franka/PandaPickCube-v0", render_mode="human", image_obs=True)
 action_spec = env.action_space
 
 
@@ -49,6 +49,15 @@ for i in range(200):
 env.close()
 imageio.mimsave("franka_render_test.mp4", frames, fps=20)
 ```
+
+
+## Teleoperation
+You can use the gamepad to control the robot.
+
+```bash
+python gym_franka/examples/test_teleoperation.py
+```
+to run the teleoperation with keyboard you can use the option `--use-keyboard`.
 
 ## Description
 
