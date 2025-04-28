@@ -157,7 +157,6 @@ class KeyboardController(InputController):
                 pass
 
         self.listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-        breakpoint()
         self.listener.start()
 
         print("Keyboard controls:")
