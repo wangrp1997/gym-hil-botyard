@@ -63,6 +63,15 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         self._random_block_position = random_block_position
 
         # Setup observation space properly to match what _compute_observation returns
+        # Observation space design:
+        #   - "state":  agent (robot) configuration as a single Box
+        #   - "environment_state": block position in the world as a single Box
+        #   - "pixels": (optional) dict of camera views if image observations are enabled
+
+        agent_dim = self.get_robot_state().shape[0]
+        agent_box = spaces.Box(-np.inf, np.inf, (agent_dim,), dtype=np.float32)
+        env_box = spaces.Box(-np.inf, np.inf, (3,), dtype=np.float32)
+
         if self.image_obs:
             self.observation_space = spaces.Dict(
                 {
@@ -82,32 +91,23 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
                             ),
                         }
                     ),
-                    "state": spaces.Dict(
-                        {
-                            "agent_pos": spaces.Box(
-                                -np.inf, np.inf, (16,), dtype=np.float32
-                            ),  # Adjust size based on actual robot state size
-                            "block_pos": spaces.Box(-np.inf, np.inf, (3,), dtype=np.float32),
-                        }
-                    ),
+                    "state": agent_box,
+                    "environment_state": env_box,
                 }
             )
         else:
             self.observation_space = spaces.Dict(
                 {
-                    "state": spaces.Dict(
-                        {
-                            "agent_pos": spaces.Box(
-                                -np.inf, np.inf, (16,), dtype=np.float32
-                            ),  # Adjust size based on actual robot state size
-                            "block_pos": spaces.Box(-np.inf, np.inf, (3,), dtype=np.float32),
-                        }
-                    ),
+                    "state": agent_box,
+                    "environment_state": env_box,
                 }
             )
 
     def reset(self, seed=None, **kwargs) -> Tuple[Dict[str, np.ndarray], Dict[str, Any]]:
         """Reset the environment."""
+        # Ensure gymnasium internal RNG is initialized when a seed is provided
+        super().reset(seed=seed)
+
         mujoco.mj_resetData(self._model, self._data)
 
         # Reset the robot to home position
@@ -155,27 +155,24 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         observation = {}
 
         # Get robot state
-        robot_state = self.get_robot_state()
+        robot_state = self.get_robot_state().astype(np.float32)
 
-        # Structure the observation properly according to our observation space
+        # Assemble observation respecting the newly defined observation_space
+        block_pos = self._data.sensor("block_pos").data.astype(np.float32)
+
         if self.image_obs:
-            # For image observations
+            # Image observations
             front_view, wrist_view = self.render()
             observation = {
                 "pixels": {"front": front_view, "wrist": wrist_view},
-                "state": {"agent_pos": robot_state},
+                "state": robot_state,
+                "environment_state": block_pos,
             }
-
-            # Add block position if you want it included
-            block_pos = self._data.sensor("block_pos").data.astype(np.float32)
-            observation["state"]["block_pos"] = block_pos
         else:
-            # For state-only observations
+            # State-only observations
             observation = {
-                "state": {
-                    "agent_pos": robot_state,
-                    "block_pos": self._data.sensor("block_pos").data.astype(np.float32),
-                }
+                "state": robot_state,
+                "environment_state": block_pos,
             }
 
         return observation
