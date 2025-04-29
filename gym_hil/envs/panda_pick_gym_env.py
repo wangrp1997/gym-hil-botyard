@@ -124,7 +124,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
 
         # Cache the initial block height
         self._z_init = self._data.sensor("block_pos").data[2]
-        self._z_success = self._z_init + 0.2
+        self._z_success = self._z_init + 0.1
 
         obs = self._compute_observation()
         return obs, {}

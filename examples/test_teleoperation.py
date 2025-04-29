@@ -25,7 +25,7 @@ import gym_hil  # noqa: F401
 
 def main():
     parser = argparse.ArgumentParser(description="Control Franka robot interactively")
-    parser.add_argument("--step-size", type=float, default=0.05, help="Step size for movement in meters")
+    parser.add_argument("--step-size", type=float, default=0.01, help="Step size for movement in meters")
     parser.add_argument(
         "--render-mode", type=str, default="human", choices=["human", "rgb_array"], help="Rendering mode"
     )
@@ -84,7 +84,7 @@ def main():
                 obs, _ = env.reset()
 
             # Add a small delay to control update rate
-            time.sleep(0.01)
+            time.sleep(0.05)
 
     except KeyboardInterrupt:
         print("Interrupted by user")
