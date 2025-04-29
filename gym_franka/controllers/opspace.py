@@ -88,23 +88,16 @@ def opspace(
     max_ori_acceleration: Optional[float] = None,
     gravity_comp: bool = True,
 ) -> np.ndarray:
-    if pos is None:
-        x_des = data.site_xpos[site_id]
-    else:
-        x_des = np.asarray(pos)
+    x_des = data.site_xpos[site_id] if pos is None else np.asarray(pos)
+
     if ori is None:
         xmat = data.site_xmat[site_id].reshape((3, 3))
         quat_des = tr.mat_to_quat(xmat.reshape((3, 3)))
     else:
         ori = np.asarray(ori)
-        if ori.shape == (3, 3):
-            quat_des = tr.mat_to_quat(ori)
-        else:
-            quat_des = ori
-    if joint is None:
-        q_des = data.qpos[dof_ids]
-    else:
-        q_des = np.asarray(joint)
+        quat_des = tr.mat_to_quat(ori) if ori.shape == (3, 3) else ori
+
+    q_des = data.qpos[dof_ids] if joint is None else np.asarray(joint)
 
     kp = np.asarray(pos_gains)
     kd = damping_ratio * 2 * np.sqrt(kp)
@@ -126,8 +119,8 @@ def opspace(
     dq = data.qvel[dof_ids]
 
     # Compute Jacobian of the eef site in world frame.
-    J_v = np.zeros((3, model.nv), dtype=np.float64)
-    J_w = np.zeros((3, model.nv), dtype=np.float64)
+    J_v = np.zeros((3, model.nv), dtype=np.float64)  # noqa: N806
+    J_w = np.zeros((3, model.nv), dtype=np.float64)  # noqa: N806
     mujoco.mj_jacSite(
         model,
         data,
@@ -135,9 +128,9 @@ def opspace(
         J_w,
         site_id,
     )
-    J_v = J_v[:, dof_ids]
-    J_w = J_w[:, dof_ids]
-    J = np.concatenate([J_v, J_w], axis=0)
+    J_v = J_v[:, dof_ids]  # noqa: N806
+    J_w = J_w[:, dof_ids]  # noqa: N806
+    J = np.concatenate([J_v, J_w], axis=0)  # noqa: N806
 
     # Compute position PD control.
     x = data.site_xpos[site_id]
@@ -164,17 +157,14 @@ def opspace(
     )
 
     # Compute inertia matrix in joint space.
-    M = np.zeros((model.nv, model.nv), dtype=np.float64)
+    M = np.zeros((model.nv, model.nv), dtype=np.float64)  # noqa: N806
     mujoco.mj_fullM(model, M, data.qM)
-    M = M[dof_ids, :][:, dof_ids]
+    M = M[dof_ids, :][:, dof_ids]  # noqa: N806
 
     # Compute inertia matrix in task space.
-    M_inv = np.linalg.inv(M)
-    Mx_inv = J @ M_inv @ J.T
-    if abs(np.linalg.det(Mx_inv)) >= 1e-2:
-        Mx = np.linalg.inv(Mx_inv)
-    else:
-        Mx = np.linalg.pinv(Mx_inv, rcond=1e-2)
+    M_inv = np.linalg.inv(M)  # noqa: N806
+    Mx_inv = J @ M_inv @ J.T  # noqa: N806
+    Mx = np.linalg.inv(Mx_inv) if abs(np.linalg.det(Mx_inv)) >= 1e-2 else np.linalg.pinv(Mx_inv, rcond=1e-2)  # noqa: N806
 
     # Compute generalized forces.
     ddx_dw = np.concatenate([ddx, dw], axis=0)
@@ -188,7 +178,7 @@ def opspace(
         kp_kv=kp_kv_joint,
         ddx_max=0.0,
     )
-    Jnull = M_inv @ J.T @ Mx
+    Jnull = M_inv @ J.T @ Mx  # noqa: N806
     tau += (np.eye(len(q)) - J.T @ Jnull.T) @ ddq
 
     if gravity_comp:

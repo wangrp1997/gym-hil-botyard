@@ -2,8 +2,8 @@
 
 import gymnasium as gym
 
+from gym_franka.wrappers.hil_wrappers import EEActionSpaceParams, EEActionWrapper, InputsControlWrapper
 from gym_franka.wrappers.viewer_wrapper import PassiveViewerWrapper
-from gym_franka.wrappers.hil_wrappers import EEActionWrapper, EEActionSpaceParams, InputsControlWrapper
 
 
 def wrap_env(
@@ -31,18 +31,10 @@ def wrap_env(
     """
     # Apply wrappers in the correct order
     if use_viewer:
-        env = PassiveViewerWrapper(
-            env, 
-            show_left_ui=show_ui, 
-            show_right_ui=show_ui
-        )
+        env = PassiveViewerWrapper(env, show_left_ui=show_ui, show_right_ui=show_ui)
 
     ee_params = EEActionSpaceParams(step_size, step_size, step_size)
-    env = EEActionWrapper(
-        env, 
-        ee_action_space_params=ee_params, 
-        use_gripper=True
-    )
+    env = EEActionWrapper(env, ee_action_space_params=ee_params, use_gripper=True)
 
     # Apply control wrappers last
     env = InputsControlWrapper(
@@ -53,7 +45,7 @@ def wrap_env(
         use_gripper=use_gripper,
         auto_reset=auto_reset,
         use_gamepad=use_gamepad,
-        )
+    )
 
     return env
 
@@ -92,4 +84,4 @@ def make_env(
         auto_reset=auto_reset,
         step_size=step_size,
         show_ui=show_ui,
-    ) 
+    )

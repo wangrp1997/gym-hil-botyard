@@ -80,7 +80,7 @@ class PassiveViewerWrapper(gym.Wrapper):
         # "close" may raise if called during interpreter shutdown; guard just
         # in case.
         if hasattr(self, "_viewer"):
-            try:
+            try:  # noqa: SIM105
                 self._viewer.close()
             except Exception:  # pragma: no cover
-                pass 
+                pass

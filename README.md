@@ -1,6 +1,6 @@
-# gym-franka
+# gym-hil
 
-A gymnasium environment for Franka Emika Panda arm
+A gymnasium environment for Human in the loop (HIL) reinforcement learning.
 
 ## Installation
 

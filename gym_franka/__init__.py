@@ -15,9 +15,10 @@
 # limitations under the License.
 
 import gymnasium as gymnasium
-from gym_franka.mujoco_gym_env import GymRenderingSpec, MujocoGymEnv, FrankaGymEnv
-from gym_franka.wrappers.viewer_wrapper import PassiveViewerWrapper
+
+from gym_franka.mujoco_gym_env import FrankaGymEnv, GymRenderingSpec, MujocoGymEnv
 from gym_franka.wrappers.factory import make_env, wrap_env
+from gym_franka.wrappers.viewer_wrapper import PassiveViewerWrapper
 
 __all__ = [
     "MujocoGymEnv",
