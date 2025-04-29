@@ -13,13 +13,13 @@
 # limitations under the License.
 
 [project.urls]
-homepage = "https://github.com/huggingface/gym-franka"
-issues = "https://github.com/huggingface/gym-franka/issues"
+homepage = "https://github.com/huggingface/gym-hil"
+issues = "https://github.com/huggingface/gym-hil/issues"
 
 [project]
-name = "gym-franka"
+name = "gym-hil"
 version = "0.1.0"
-description = "A gymnasium environment for Franka Emika Panda"
+description = "A gymnasium environment for Human-in-the-Loop Reinforcement Learning"
 authors = [
   {name = "Khalil Meftah", email = "kmeftah.khalil@gmail.com"},
   {name = "Ke Wang", email = "superwk1017@gmail.com"},

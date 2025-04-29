@@ -4,9 +4,9 @@ import imageio
 import gymnasium as gym
 import numpy as np
 
-import gym_franka
+import gym_hil
 
-env = gym.make("gym_franka/PandaPickCubeViewer-v0", image_obs=True)
+env = gym.make("gym_hil/PandaPickCubeViewer-v0", image_obs=True)
 action_spec = env.action_space
 
 

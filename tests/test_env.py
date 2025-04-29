@@ -18,7 +18,7 @@ import gymnasium as gym
 import pytest
 from gymnasium.utils.env_checker import check_env
 
-import gym_franka  # noqa: F401
+import gym_hil  # noqa: F401
 
 
 @pytest.mark.parametrize(
@@ -28,6 +28,6 @@ import gym_franka  # noqa: F401
         ("PandaPickCubeBase-v0", True),
     ],
 )
-def test_franka(env_task, image_obs):
-    env = gym.make(f"gym_franka/{env_task}", image_obs=image_obs)
+def test_hil(env_task, image_obs):
+    env = gym.make(f"gym_hil/{env_task}", image_obs=image_obs)
     check_env(env.unwrapped)

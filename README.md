@@ -37,7 +37,7 @@ import numpy as np
 import gym_hil
 
 # Use the Franka environment
-env = gym.make("gym_franka/PandaPickCubeBase-v0", render_mode="human", image_obs=True)
+env = gym.make("gym_hil/PandaPickCubeBase-v0", render_mode="human", image_obs=True)
 action_spec = env.action_space
 
 obs, info = env.reset()
@@ -68,7 +68,7 @@ imageio.mimsave("franka_render_test.mp4", frames, fps=20)
 For Franka environments, you can use the gamepad or keyboard to control the robot:
 
 ```bash
-python gym_franka/examples/test_teleoperation.py
+python gym_hil/examples/test_teleoperation.py
 ```
 
 To run the teleoperation with keyboard you can use the option `--use-keyboard`.
