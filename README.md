@@ -1,46 +1,51 @@
 # gym-hil
 
-A gymnasium environment for Human in the loop (HIL) reinforcement learning.
+A collection of gymnasium environments for Human-In-the-Loop (HIL) reinforcement learning, compatible with Hugging Face's LeRobot codebase.
+
+## Overview
+
+The `gym-hil` package provides environments designed for human-in-the-loop reinforcement learning. The list of environments are integrated with external devices like gamepads and keyboards, making it easy to collect demonstrations and perform interventions during learning.
+
+Currently available environments:
+- **Franka Panda Robot**: A robotic manipulation environment for Franka Panda robot based on MuJoCo
 
 ## Installation
 
 Create a virtual environment with Python 3.10 and activate it, e.g. with [`miniconda`](https://docs.anaconda.com/free/miniconda/index.html):
 ```bash
-conda create -y -n franka python=3.10 && conda activate franka
+conda create -y -n gym_hil python=3.10 && conda activate gym_hil
 ```
 
-Install gym-franka:
+Install gym-hil from PyPI:
 ```bash
-pip install gym-franka
+pip install gym-hil
+```
+or from source:
+```bash
+git clone https://github.com/HuggingFace/gym-hil.git && cd gym-hil
+pip install -e .
 ```
 
-## Quick start
+## Franka Environment Quick Start
 
 ```python
 import time
-
 import imageio
 import gymnasium as gym
 import numpy as np
 
-import gym_franka
+import gym_hil
 
-env = gym.make("gym_franka/PandaPickCube-v0", render_mode="human", image_obs=True)
+# Use the Franka environment
+env = gym.make("gym_franka/PandaPickCubeBase-v0", render_mode="human", image_obs=True)
 action_spec = env.action_space
-
-
-def sample():
-    a = np.random.uniform(action_spec.low, action_spec.high, action_spec.shape)
-    return a.astype(action_spec.dtype)
-
 
 obs, info = env.reset()
 frames = []
 
 for i in range(200):
-    a = sample()
-    obs, rew, done, truncated, info = env.step(a)
-    images = obs["images"]
+    obs, rew, done, truncated, info = env.step(env.action_space.sample())
+    images = obs["pixels"]
     frames.append(np.concatenate((images["front"], images["wrist"]), axis=0))
 
     if done:
@@ -50,62 +55,43 @@ env.close()
 imageio.mimsave("franka_render_test.mp4", frames, fps=20)
 ```
 
+## Available Environments
+
+### Franka Panda Robot Environments
+
+- **PandaPickCubeBase-v0**: The core environment with the Franka arm and a cube to pick up.
+- **PandaPickCubeGamepad-v0**: Includes gamepad control for teleoperation.
+- **PandaPickCubeKeyboard-v0**: Includes keyboard control for teleoperation.
 
 ## Teleoperation
-You can use the gamepad to control the robot.
+
+For Franka environments, you can use the gamepad or keyboard to control the robot:
 
 ```bash
 python gym_franka/examples/test_teleoperation.py
 ```
-to run the teleoperation with keyboard you can use the option `--use-keyboard`.
 
-## Description
+To run the teleoperation with keyboard you can use the option `--use-keyboard`.
 
-Franka Emika Panda environment.
+### Human-in-the-Loop Wrappers
 
-### Action Space
+The `hil_wrappers.py` module provides wrappers for human-in-the-loop interaction:
 
+- **EEActionWrapper**: Transforms actions to end-effector space for intuitive control
+- **InputsControlWrapper**: Adds gamepad or keyboard control for teleoperation
+- **GripperPenaltyWrapper**: Optional wrapper to add penalties for excessive gripper actions
 
-### Observation Space
+These wrappers make it easy to build environments for human demonstrations and interactive learning.
 
+## LeRobot Compatibility
 
-### Rewards
+All environments in `gym-hil` are designed to work seamlessly with Hugging Face's LeRobot codebase for human-in-the-loop reinforcement learning. This makes it easy to:
 
-
-### Success Criteria
-
-
-### Starting State
-
-
-### Episode Termination
-
-
-### Arguments
-
-
-### Reset Arguments
-
-
-## Version History
-
-* v0: Original version
-
-
-## References
-
+- Collect human demonstrations
+- Train agents with human feedback
+- Perform interactive learning with human intervention
 
 ## Contribute
-
-Instead of using `pip` directly, we use `poetry` for development purposes to easily track our dependencies.
-If you don't have it already, follow the [instructions](https://python-poetry.org/docs/#installation) to install it.
-
-Install the project with dev dependencies:
-```bash
-poetry install --all-extras
-```
-
-### Follow our style
 
 ```bash
 # install pre-commit hooks
@@ -117,4 +103,8 @@ pre-commit
 
 ## Acknowledgment
 
-gym-franka is adapted from [franka-sim](https://github.com/rail-berkeley/serl/tree/main/franka_sim) initially built by [Kevin Zakka](https://kzakka.com/).
+The Franka environment in gym-hil is adapted from [franka-sim](https://github.com/rail-berkeley/serl/tree/main/franka_sim) initially built by [Kevin Zakka](https://kzakka.com/).
+
+## Version History
+
+* v0: Original version
