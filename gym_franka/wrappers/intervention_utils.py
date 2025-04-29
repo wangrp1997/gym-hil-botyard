@@ -133,7 +133,7 @@ class KeyboardController(InputController):
                     self.key_states["failure"] = True
                     self.episode_end_status = "failure"
                 elif key == keyboard.Key.space:
-                    self.key_states["intervention"] = True
+                    self.key_states["intervention"] = not self.key_states["intervention"]
                 elif key == keyboard.Key.r:
                     self.key_states["rerecord"] = True
             except AttributeError:

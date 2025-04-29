@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Literal, Optional, Tuple
 
-# import gym
 import gymnasium as gym
 import mujoco
 import numpy as np

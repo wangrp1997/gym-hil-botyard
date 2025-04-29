@@ -24,8 +24,8 @@ import gym_franka  # noqa: F401
 @pytest.mark.parametrize(
     "env_task, image_obs",
     [
-        ("PandaPickCube-v0", False),
-        ("PandaPickCube-v0", True),
+        ("PandaPickCubeBase-v0", False),
+        ("PandaPickCubeBase-v0", True),
     ],
 )
 def test_franka(env_task, image_obs):

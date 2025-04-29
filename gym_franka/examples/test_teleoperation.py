@@ -17,6 +17,7 @@
 import argparse
 import time
 import numpy as np
+import gymnasium as gym
 
 from gym_franka.envs.panda_pick_gym_env import PandaPickCubeGymEnv
 from gym_franka.wrappers.viewer_wrapper import PassiveViewerWrapper
@@ -45,31 +46,42 @@ def main():
     )
     args = parser.parse_args()
 
-    # Create Franka environment
-    env = PandaPickCubeGymEnv(
+    # Create Franka environment - Use base environment first to debug
+    env = gym.make(
+        "gym_franka/PandaPickCubeBase-v0",  # Use the base environment for debugging
+        render_mode=args.render_mode,
+        image_obs=True
+    )
+
+    # Print observation space for debugging
+    print("Observation space:", env.observation_space)
+
+    # Reset and check observation structure
+    obs, _ = env.reset()
+    print("Observation keys:", list(obs.keys()))
+    if "state" in obs:
+        print("State keys:", list(obs["state"].keys()))
+    if "pixels" in obs:
+        print("Pixels keys:", list(obs["pixels"].keys()))
+
+    # Now try with the wrapped version
+    print("\nTrying wrapped environment...")
+    env = gym.make(
+        "gym_franka/PandaPickCubeGamepad-v0", 
         render_mode=args.render_mode,
         image_obs=True,
-        reward_type="dense",
+        step_size=args.step_size,
+        use_gamepad=not args.use_keyboard
     )
-    
-    # Add PassiveViewer wrapper for visualization
-    env = PassiveViewerWrapper(env, show_left_ui=True, show_right_ui=True)
-    
-    # Add EEActionWrapper to change action space to end-effector control
-    ee_params = EEActionSpaceParams(args.step_size, args.step_size, args.step_size)
-    env = EEActionWrapper(env, ee_action_space_params=ee_params, use_gripper=True)
+
+    # Print observation space for the wrapped environment
+    print("Wrapped observation space:", env.observation_space)
+
+    # Reset and check wrapped observation structure
+    obs, _ = env.reset()
+    print("Wrapped observation keys:", list(obs.keys()))
     
 
-    # Add GamepadControlWrapper to enable gamepad control
-    env = InputsControlWrapper(
-        env,
-        x_step_size=args.step_size,
-        y_step_size=args.step_size,
-        z_step_size=args.step_size,
-        use_gripper=True,
-        use_gamepad=not args.use_keyboard,
-    )
-    
     # Reset environment
     obs, _ = env.reset()
     dummy_action = np.zeros(4, dtype=np.float32)

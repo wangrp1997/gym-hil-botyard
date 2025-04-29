@@ -64,12 +64,24 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         self._block_z = self._model.geom("block").size[2]
         self._random_block_position = random_block_position
         
-        # Enhance observation space with block position if not using image observations
-        if not self.image_obs:
-            state_dict = self.observation_space["state"].spaces
-            state_dict["block_pos"] = spaces.Box(-np.inf, np.inf, shape=(3,), dtype=np.float32)
+        # Setup observation space properly to match what _compute_observation returns
+        if self.image_obs:
             self.observation_space = spaces.Dict({
-                "state": spaces.Dict(state_dict)
+                "pixels": spaces.Dict({
+                    "front": spaces.Box(0, 255, (self._render_specs.height, self._render_specs.width, 3), dtype=np.uint8),
+                    "wrist": spaces.Box(0, 255, (self._render_specs.height, self._render_specs.width, 3), dtype=np.uint8),
+                }),
+                "state": spaces.Dict({
+                    "agent_pos": spaces.Box(-np.inf, np.inf, (16,), dtype=np.float32),  # Adjust size based on actual robot state size
+                    "block_pos": spaces.Box(-np.inf, np.inf, (3,), dtype=np.float32),
+                }),
+            })
+        else:
+            self.observation_space = spaces.Dict({
+                "state": spaces.Dict({
+                    "agent_pos": spaces.Box(-np.inf, np.inf, (16,), dtype=np.float32),  # Adjust size based on actual robot state size
+                    "block_pos": spaces.Box(-np.inf, np.inf, (3,), dtype=np.float32),
+                }),
             })
 
     def reset(
@@ -122,25 +134,39 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
 
     def _compute_observation(self) -> dict:
         """Compute the current observation."""
-        obs = {}
+        # Create the dictionary structure that matches our observation space
+        observation = {}
 
         # Get robot state
-        obs["agent_pos"] = self.get_robot_state()
+        robot_state = self.get_robot_state()
         
-        # Add block position if not using image observations
-        if not self.image_obs:
-            block_pos = self._data.sensor("block_pos").data.astype(np.float32)
-            obs["environment_state"] = block_pos
-        
-        # Add camera images if using image observations
+        # Structure the observation properly according to our observation space
         if self.image_obs:
+            # For image observations
             front_view, wrist_view = self.render()
-            obs["pixels"] = {
-                "front": front_view,
-                "wrist": wrist_view
+            observation = {
+                "pixels": {
+                    "front": front_view,
+                    "wrist": wrist_view
+                },
+                "state": {
+                    "agent_pos": robot_state
+                }
+            }
+            
+            # Add block position if you want it included
+            block_pos = self._data.sensor("block_pos").data.astype(np.float32)
+            observation["state"]["block_pos"] = block_pos
+        else:
+            # For state-only observations
+            observation = {
+                "state": {
+                    "agent_pos": robot_state,
+                    "block_pos": self._data.sensor("block_pos").data.astype(np.float32)
+                }
             }
         
-        return obs
+        return observation
 
     def _compute_reward(self) -> float:
         """Compute reward based on current state."""

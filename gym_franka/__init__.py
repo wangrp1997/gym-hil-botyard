@@ -15,29 +15,64 @@
 # limitations under the License.
 
 import gymnasium as gymnasium
-from gym_franka.mujoco_gym_env import GymRenderingSpec, MujocoGymEnv
+from gym_franka.mujoco_gym_env import GymRenderingSpec, MujocoGymEnv, FrankaGymEnv
 from gym_franka.wrappers.viewer_wrapper import PassiveViewerWrapper
+from gym_franka.wrappers.factory import make_env, wrap_env
 
 __all__ = [
     "MujocoGymEnv",
+    "FrankaGymEnv",
     "GymRenderingSpec",
     "PassiveViewerWrapper",
+    "make_env",
+    "wrap_env",
 ]
 
 from gymnasium.envs.registration import register
 
+# Register the base environment directly
 register(
-    id="gym_franka/PandaPickCube-v0",
+    id="gym_franka/PandaPickCubeBase-v0",  # This is the base environment
     entry_point="gym_franka.envs:PandaPickCubeGymEnv",
     max_episode_steps=100,
-    kwargs={"image_obs": True},
 )
 
+# Register the viewer wrapper
 register(
     id="gym_franka/PandaPickCubeViewer-v0",
     entry_point=lambda **kwargs: PassiveViewerWrapper(
-        gymnasium.make("gym_franka/PandaPickCube-v0", **kwargs)  # type: ignore
+        gymnasium.make("gym_franka/PandaPickCubeBase-v0", **kwargs)
     ),
     max_episode_steps=100,
-    kwargs={"image_obs": True},
+)
+
+# Register wrapped versions using the factory - NOTE: these now use PandaPickCubeBase-v0
+register(
+    id="gym_franka/PandaPickCube-v0",
+    entry_point="gym_franka.wrappers.factory:make_env",
+    max_episode_steps=100,
+    kwargs={
+        "env_id": "gym_franka/PandaPickCubeBase-v0",  # Use the base environment
+    },
+)
+
+register(
+    id="gym_franka/PandaPickCubeGamepad-v0",
+    entry_point="gym_franka.wrappers.factory:make_env",
+    max_episode_steps=100,
+    kwargs={
+        "env_id": "gym_franka/PandaPickCubeBase-v0",  # Use the base environment
+        "use_viewer": True,
+        "use_gamepad": True,
+    },
+)
+
+register(
+    id="gym_franka/PandaPickCubeKeyboard-v0",
+    entry_point="gym_franka.wrappers.factory:make_env",
+    max_episode_steps=100,
+    kwargs={
+        "env_id": "gym_franka/PandaPickCubeBase-v0",  # Use the base environment
+        "use_viewer": True,
+    },
 )
