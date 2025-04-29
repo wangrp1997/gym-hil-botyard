@@ -22,7 +22,7 @@ from gymnasium import spaces
 
 from gym_hil.mujoco_gym_env import FrankaGymEnv, GymRenderingSpec
 
-_PANDA_HOME = np.asarray((0, -0.785, 0, -2.35, 0, 1.57, np.pi / 4))
+_PANDA_HOME = np.asarray((0, 0.195, 0, -2.43, 0, 2.62, 0.785))
 _CARTESIAN_BOUNDS = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]])
 _SAMPLING_BOUNDS = np.asarray([[0.3, -0.15], [0.5, 0.15]])
 
@@ -118,7 +118,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
             block_xy = np.random.uniform(*_SAMPLING_BOUNDS)
             self._data.jnt("block").qpos[:3] = (*block_xy, self._block_z)
         else:
-            block_xy = np.asarray([0.3, 0.0])
+            block_xy = np.asarray([0.5, 0.0])
             self._data.jnt("block").qpos[:3] = (*block_xy, self._block_z)
         mujoco.mj_forward(self._model, self._data)
 

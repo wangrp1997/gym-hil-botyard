@@ -20,6 +20,8 @@ import time
 import gymnasium as gym
 import numpy as np
 
+import gym_hil  # noqa: F401
+
 
 def main():
     parser = argparse.ArgumentParser(description="Control Franka robot interactively")
