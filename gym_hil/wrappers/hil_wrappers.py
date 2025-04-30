@@ -44,12 +44,11 @@ class GripperPenaltyWrapper(gym.Wrapper):
     def step(self, action):
         observation, reward, terminated, truncated, info = self.env.step(action)
 
+        info["discrete_penalty"] = 0.0
         if (action[-1] < -0.5 and self.last_gripper_pos > 0.9) or (
             action[-1] > 0.5 and self.last_gripper_pos < 0.1
         ):
-            info["gripper_penalty"] = self.penalty
-        else:
-            info["gripper_penalty"] = 0.0
+            info["discrete_penalty"] = self.penalty
 
         self.last_gripper_pos = self.unwrapped.get_gripper_pose() / MAX_GRIPPER_COMMAND
         return observation, reward, terminated, truncated, info
