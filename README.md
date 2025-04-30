@@ -11,7 +11,7 @@ Currently available environments:
 
 **What is Human-In-the-Loop (HIL) RL?**
 
-Human-in-the-Loop (HIL) Reinforcement Learning keeps a human inside the control loop while the agent is training. During every rollout, the policy proposes an action, but the human may instantly override it for as many consecutive steps as needed; the robot then executes the human’s command instead of the policy’s choice. This approach improves sample efficiency and promotes safer exploration, as corrective actions pull the system out of unrecoverable or dangerous states and guide it toward high-value behaviors.
+Human-in-the-Loop (HIL) Reinforcement Learning keeps a human inside the control loop while the agent is training. During every rollout, the policy proposes an action, but the human may instantly override it for as many consecutive steps as needed; the robot then executes the human's command instead of the policy's choice. This approach improves sample efficiency and promotes safer exploration, as corrective actions pull the system out of unrecoverable or dangerous states and guide it toward high-value behaviors.
 
 <div align="center">
   <img src="images/hil-rl-schema.png" alt="Human-in-the-Loop RL Schema" width="70%"/>
@@ -53,6 +53,8 @@ frames = []
 
 for i in range(200):
     obs, rew, done, truncated, info = env.step(env.action_space.sample())
+    # info contains the key "is_intervention" (boolean) indicating if a human intervention occurred
+    # If info["is_intervention"] is True, then info["action_intervention"] contains the action that was executed
     images = obs["pixels"]
     frames.append(np.concatenate((images["front"], images["wrist"]), axis=0))
 
