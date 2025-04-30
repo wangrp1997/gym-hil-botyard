@@ -88,7 +88,7 @@ class PassiveViewerWrapper(gym.Wrapper):
         # 1. Tidy up the renderer managed by the wrapped environment (if any).
         base_env = self.env.unwrapped  # type: ignore[attr-defined]
         if hasattr(base_env, "_viewer"):
-            viewer = getattr(base_env, "_viewer")
+            viewer = base_env._viewer
             if viewer is not None and hasattr(viewer, "close") and callable(viewer.close):
                 try:  # noqa: SIM105
                     viewer.close()
@@ -97,10 +97,10 @@ class PassiveViewerWrapper(gym.Wrapper):
                     # already-freed contexts.
                     pass
             # Prevent the underlying env from trying to close it again.
-            setattr(base_env, "_viewer", None)
+            base_env._viewer = None
 
         # 2. Close the passive viewer launched by this wrapper.
-        try:
+        try:  # noqa: SIM105
             self._viewer.close()
         except Exception:  # pragma: no cover
             # Defensive: avoid propagating viewer shutdown errors.
