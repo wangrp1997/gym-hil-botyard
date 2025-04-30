@@ -75,5 +75,6 @@ register(
     kwargs={
         "env_id": "gym_hil/PandaPickCubeBase-v0",  # Use the base environment
         "use_viewer": True,
+        "gripper_penalty": -0.05,
     },
 )

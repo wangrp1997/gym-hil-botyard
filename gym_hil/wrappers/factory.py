@@ -69,6 +69,7 @@ def make_env(
     auto_reset: bool = False,
     step_size: float = 0.01,
     show_ui: bool = True,
+    gripper_penalty: float = -0.02,
     **kwargs,
 ) -> gym.Env:
     """Create and wrap an environment in a single function.
@@ -81,13 +82,18 @@ def make_env(
         auto_reset: Whether to automatically reset the environment when episode ends
         step_size: Step size for movement in meters
         show_ui: Whether to show UI panels in the viewer
-        **kwargs: Additional arguments to pass to gym.make
+        gripper_penalty: Penalty for using the gripper
+        **kwargs: Additional arguments to pass to the base environment
 
     Returns:
         The wrapped environment
     """
     # Create the base environment directly
-    env = PandaPickCubeGymEnv(**kwargs)
+    if env_id == "gym_hil/PandaPickCubeBase-v0":
+        env = PandaPickCubeGymEnv(**kwargs)
+    else:
+        raise ValueError(f"Environment ID {env_id} not supported")
+
     return wrap_env(
         env,
         use_viewer=use_viewer,
@@ -96,4 +102,5 @@ def make_env(
         auto_reset=auto_reset,
         step_size=step_size,
         show_ui=show_ui,
+        gripper_penalty=gripper_penalty,
     )
