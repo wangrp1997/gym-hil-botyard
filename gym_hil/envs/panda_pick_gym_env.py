@@ -32,9 +32,8 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
 
     def __init__(
         self,
-        action_scale: np.ndarray = np.asarray([0.05, 1]),  # noqa: B008
         seed: int = 0,
-        control_dt: float = 0.02,
+        control_dt: float = 0.1,
         physics_dt: float = 0.002,
         time_limit: float = 20.0,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
@@ -46,7 +45,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         self.reward_type = reward_type
 
         super().__init__(
-            action_scale=action_scale,
             seed=seed,
             control_dt=control_dt,
             physics_dt=physics_dt,
@@ -139,13 +137,16 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         rew = self._compute_reward()
         success = self._is_success()
 
+        if self.reward_type == "sparse":
+            success = rew == 1.0
+
         # Check if block is outside bounds
         block_pos = self._data.sensor("block_pos").data
         exceeded_bounds = np.any(block_pos[:2] < (_SAMPLING_BOUNDS[0] - 0.05)) or np.any(
             block_pos[:2] > (_SAMPLING_BOUNDS[1] + 0.05)
         )
 
-        terminated = self.time_limit_exceeded() or success or exceeded_bounds
+        terminated = bool(success or exceeded_bounds)
 
         return obs, rew, terminated, False, {"succeed": success}
 
@@ -190,7 +191,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
             return 0.3 * r_close + 0.7 * r_lift
         else:
             lift = block_pos[2] - self._z_init
-            return float(lift > 0.2)
+            return float(lift > 0.1)
 
     def _is_success(self) -> bool:
         """Check if the task is successfully completed."""
@@ -198,7 +199,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         tcp_pos = self._data.sensor("2f85/pinch_pos").data
         dist = np.linalg.norm(block_pos - tcp_pos)
         lift = block_pos[2] - self._z_init
-        return dist < 0.05 and lift > 0.2
+        return dist < 0.05 and lift > 0.1
 
 
 if __name__ == "__main__":

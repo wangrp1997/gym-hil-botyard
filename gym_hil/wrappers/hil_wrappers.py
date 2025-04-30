@@ -20,6 +20,8 @@ import sys
 import gymnasium as gym
 import numpy as np
 
+from gym_hil.mujoco_gym_env import MAX_GRIPPER_COMMAND
+
 
 class EEActionSpaceParams:
     def __init__(self, x_step_size, y_step_size, z_step_size):
@@ -36,7 +38,7 @@ class GripperPenaltyWrapper(gym.Wrapper):
 
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
-        self.last_gripper_pos = obs["observation.state"][7]
+        self.last_gripper_pos = self.unwrapped.get_gripper_pose() / MAX_GRIPPER_COMMAND
         return obs, info
 
     def step(self, action):
@@ -49,7 +51,7 @@ class GripperPenaltyWrapper(gym.Wrapper):
         else:
             info["gripper_penalty"] = 0.0
 
-        self.last_gripper_pos = observation["observation.state"][7]
+        self.last_gripper_pos = self.unwrapped.get_gripper_pose() / MAX_GRIPPER_COMMAND
         return observation, reward, terminated, truncated, info
 
 
@@ -245,7 +247,7 @@ class InputsControlWrapper(gym.Wrapper):
             logging.info("Episode ended successfully with reward 1.0")
 
         info["is_intervention"] = is_intervention
-        action_intervention = action if is_intervention else None
+        action_intervention = action
 
         info["action_intervention"] = action_intervention
         info["rerecord_episode"] = rerecord_episode

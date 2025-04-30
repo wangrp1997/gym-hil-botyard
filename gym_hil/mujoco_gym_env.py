@@ -107,7 +107,6 @@ class FrankaGymEnv(MujocoGymEnv):
     def __init__(
         self,
         xml_path: Path | None = None,
-        action_scale: np.ndarray = np.asarray([0.05, 1]),  # noqa: B008
         seed: int = 0,
         control_dt: float = 0.02,
         physics_dt: float = 0.002,
@@ -130,7 +129,6 @@ class FrankaGymEnv(MujocoGymEnv):
             render_spec=render_spec,
         )
 
-        self._action_scale = action_scale
         self._home_position = home_position
         self._cartesian_bounds = cartesian_bounds
 
@@ -211,6 +209,7 @@ class FrankaGymEnv(MujocoGymEnv):
     def reset_robot(self):
         """Reset the robot to home position."""
         self._data.qpos[self._panda_dof_ids] = self._home_position
+        self._data.ctrl[self._panda_ctrl_ids] = 0.0
         mujoco.mj_forward(self._model, self._data)
 
         # Reset mocap body to home position
@@ -250,13 +249,14 @@ class FrankaGymEnv(MujocoGymEnv):
     def get_robot_state(self):
         """Get the current state of the robot."""
         tcp_pos = self._data.sensor("2f85/pinch_pos").data
-        tcp_quat = self._data.sensor("2f85/pinch_quat").data
-        tcp_vel = self._data.sensor("2f85/pinch_vel").data
-        tcp_angvel = self._data.sensor("2f85/pinch_angvel").data
+        # tcp_quat = self._data.sensor("2f85/pinch_quat").data
+        # tcp_vel = self._data.sensor("2f85/pinch_vel").data
+        # tcp_angvel = self._data.sensor("2f85/pinch_angvel").data
         qpos = self.data.qpos[self._panda_dof_ids].astype(np.float32)
+        qvel = self.data.qvel[self._panda_dof_ids].astype(np.float32)
         gripper_pose = self.get_gripper_pose()
 
-        return np.concatenate([qpos, gripper_pose, tcp_pos, tcp_quat, tcp_vel, tcp_angvel])
+        return np.concatenate([qpos, qvel, gripper_pose, tcp_pos])
 
     def render(self):
         """Render the environment and return frames from multiple cameras."""

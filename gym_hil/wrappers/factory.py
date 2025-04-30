@@ -2,7 +2,12 @@
 
 import gymnasium as gym
 
-from gym_hil.wrappers.hil_wrappers import EEActionSpaceParams, EEActionWrapper, InputsControlWrapper
+from gym_hil.wrappers.hil_wrappers import (
+    EEActionSpaceParams,
+    EEActionWrapper,
+    GripperPenaltyWrapper,
+    InputsControlWrapper,
+)
 from gym_hil.wrappers.viewer_wrapper import PassiveViewerWrapper
 
 
@@ -14,6 +19,7 @@ def wrap_env(
     auto_reset: bool = False,
     step_size: float = 0.01,
     show_ui: bool = True,
+    gripper_penalty: float = -0.02,
 ) -> gym.Env:
     """Apply wrappers to an environment based on configuration.
 
@@ -25,6 +31,7 @@ def wrap_env(
         auto_reset: Whether to automatically reset the environment when episode ends
         step_size: Step size for movement in meters
         show_ui: Whether to show UI panels in the viewer
+        gripper_penalty: Penalty for using the gripper
 
     Returns:
         The wrapped environment
@@ -32,6 +39,9 @@ def wrap_env(
     # Apply wrappers in the correct order
     if use_viewer:
         env = PassiveViewerWrapper(env, show_left_ui=show_ui, show_right_ui=show_ui)
+
+    if use_gripper:
+        env = GripperPenaltyWrapper(env, penalty=gripper_penalty)
 
     ee_params = EEActionSpaceParams(step_size, step_size, step_size)
     env = EEActionWrapper(env, ee_action_space_params=ee_params, use_gripper=True)
