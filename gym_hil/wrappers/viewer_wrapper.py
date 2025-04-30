@@ -47,8 +47,8 @@ class PassiveViewerWrapper(gym.Wrapper):
         self._viewer = mujoco.viewer.launch_passive(
             env.unwrapped.model,
             env.unwrapped.data,
-            show_left_ui=show_left_ui,
-            show_right_ui=show_right_ui,
+            # show_left_ui=show_left_ui,
+            # show_right_ui=show_right_ui,
         )
 
         # Make sure the first frame is rendered.
@@ -68,13 +68,46 @@ class PassiveViewerWrapper(gym.Wrapper):
         return observation, reward, terminated, truncated, info
 
     def close(self) -> None:  # type: ignore[override]
-        # Close the viewer first to free the OpenGL context.
+        """Close both the passive viewer and the underlying gym environment.
+
+        MuJoCo's `Renderer` gained a `close()` method only in recent versions
+        (>= 2.3.0).  When running with an older MuJoCo build the renderer
+        instance stored inside `env.unwrapped._viewer` does not provide this
+        method which causes `AttributeError` when the environment is closed.
+
+        To remain version-agnostic we:
+          1. Manually dispose of the underlying viewer *only* if it exposes a
+             `close` method.
+          2. Remove the reference from the environment so that a subsequent
+             call to `env.close()` will not fail.
+          3. Close our own passive viewer handle.
+          4. Finally forward the `close()` call to the wrapped environment so
+             that any other resources are released.
+        """
+
+        # 1. Tidy up the renderer managed by the wrapped environment (if any).
+        base_env = self.env.unwrapped  # type: ignore[attr-defined]
+        if hasattr(base_env, "_viewer"):
+            viewer = getattr(base_env, "_viewer")
+            if viewer is not None and hasattr(viewer, "close") and callable(viewer.close):
+                try:  # noqa: SIM105
+                    viewer.close()
+                except Exception:
+                    # Ignore errors coming from older MuJoCo versions or
+                    # already-freed contexts.
+                    pass
+            # Prevent the underlying env from trying to close it again.
+            setattr(base_env, "_viewer", None)
+
+        # 2. Close the passive viewer launched by this wrapper.
         try:
             self._viewer.close()
-        finally:
-            # Always forward the close call even if the viewer is already shut
-            # down so resources held by the underlying environment are freed.
-            self.env.close()
+        except Exception:  # pragma: no cover
+            # Defensive: avoid propagating viewer shutdown errors.
+            pass
+
+        # 3. Let the wrapped environment perform its own cleanup.
+        self.env.close()
 
     def __del__(self):
         # "close" may raise if called during interpreter shutdown; guard just
@@ -82,5 +115,5 @@ class PassiveViewerWrapper(gym.Wrapper):
         if hasattr(self, "_viewer"):
             try:  # noqa: SIM105
                 self._viewer.close()
-            except Exception:  # pragma: no cover
+            except Exception:
                 pass

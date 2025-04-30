@@ -71,9 +71,27 @@ class MujocoGymEnv(gym.Env):
         return self._viewer.render()
 
     def close(self) -> None:
-        if self._viewer is not None:
-            self._viewer.close()
-            self._viewer = None
+        """Release graphics resources if they exist.
+
+        In MuJoCo < 2.3.0 `mujoco.Renderer` had no `close()` member.  Calling
+        it unconditionally therefore raises `AttributeError`.  We check for
+        the attribute first and fall back to a no-op, keeping compatibility
+        across MuJoCo versions.
+        """
+
+        viewer = self._viewer
+        if viewer is None:
+            return
+
+        if hasattr(viewer, "close") and callable(viewer.close):
+            try:  # noqa: SIM105
+                viewer.close()
+            except Exception:
+                # Ignore errors coming from already freed OpenGL contexts or
+                # older MuJoCo builds.
+                pass
+
+        self._viewer = None
 
     def time_limit_exceeded(self) -> bool:
         return self._data.time >= self._time_limit
