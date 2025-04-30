@@ -2,6 +2,7 @@
 
 import gymnasium as gym
 
+from gym_hil.envs.panda_pick_gym_env import PandaPickCubeGymEnv
 from gym_hil.wrappers.hil_wrappers import (
     EEActionSpaceParams,
     EEActionWrapper,
@@ -85,7 +86,8 @@ def make_env(
     Returns:
         The wrapped environment
     """
-    env = gym.make(env_id, **kwargs)
+    # Create the base environment directly
+    env = PandaPickCubeGymEnv(**kwargs)
     return wrap_env(
         env,
         use_viewer=use_viewer,
