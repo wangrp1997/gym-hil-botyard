@@ -17,6 +17,20 @@ Human-in-the-Loop (HIL) Reinforcement Learning keeps a human inside the control 
   <img src="images/hil-rl-schema.png" alt="Human-in-the-Loop RL Schema" width="70%"/>
 </div>
 
+## Demo Video
+
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=99sVWGECBas">
+    <img src="https://img.youtube.com/vi/99sVWGECBas/maxresdefault.jpg" alt="Watch the gym-hil demo video" width="480"/>
+  </a>
+  <br/>
+  <em>Click the image to watch a demo of gym-hil in action!</em>
+</div>
+
+We use [HIL-SERL](https://hil-serl.github.io/) from [LeRobot](https://github.com/huggingface/lerobot) to train this policy.  
+The policy was trained for **10 minutes** with human in the loop.  
+After only 10 minutes of training, the policy successfully performs the task.
+
 ## Installation
 
 Create a virtual environment with Python 3.10 and activate it, e.g. with [`miniconda`](https://docs.anaconda.com/free/miniconda/index.html):
