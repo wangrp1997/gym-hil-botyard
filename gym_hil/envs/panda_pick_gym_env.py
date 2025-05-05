@@ -89,14 +89,14 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
                             ),
                         }
                     ),
-                    "state": agent_box,
+                    "agent_pos": agent_box,
                     "environment_state": env_box,
                 }
             )
         else:
             self.observation_space = spaces.Dict(
                 {
-                    "state": agent_box,
+                    "agent_pos": agent_box,
                     "environment_state": env_box,
                 }
             )
@@ -166,13 +166,13 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
             front_view, wrist_view = self.render()
             observation = {
                 "pixels": {"front": front_view, "wrist": wrist_view},
-                "state": robot_state,
+                "agent_pos": robot_state,
                 "environment_state": block_pos,
             }
         else:
             # State-only observations
             observation = {
-                "state": robot_state,
+                "agent_pos": robot_state,
                 "environment_state": block_pos,
             }
 
