@@ -90,7 +90,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
                         }
                     ),
                     "agent_pos": agent_box,
-                    "environment_state": env_box,
                 }
             )
         else:
@@ -167,7 +166,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
             observation = {
                 "pixels": {"front": front_view, "wrist": wrist_view},
                 "agent_pos": robot_state,
-                "environment_state": block_pos,
             }
         else:
             # State-only observations
