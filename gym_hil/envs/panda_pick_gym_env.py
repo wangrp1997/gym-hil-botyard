@@ -144,7 +144,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         )
 
         terminated = bool(success or exceeded_bounds)
-        # breakpoint()
 
         return obs, rew, terminated, False, {"succeed": success}
 
