@@ -56,6 +56,7 @@ def main():
         image_obs=True,
         step_size=args.step_size,
         use_gamepad=not args.use_keyboard,
+        max_episode_steps=1000,  # 100 seconds * 10Hz
     )
 
     # Print observation space for the wrapped environment
