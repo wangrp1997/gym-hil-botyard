@@ -35,7 +35,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         seed: int = 0,
         control_dt: float = 0.1,
         physics_dt: float = 0.002,
-        time_limit: float = 20.0,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
         render_mode: Literal["rgb_array", "human"] = "rgb_array",
         image_obs: bool = False,
@@ -48,7 +47,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
             seed=seed,
             control_dt=control_dt,
             physics_dt=physics_dt,
-            time_limit=time_limit,
             render_spec=render_spec,
             render_mode=render_mode,
             image_obs=image_obs,

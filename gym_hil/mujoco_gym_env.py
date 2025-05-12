@@ -45,7 +45,6 @@ class MujocoGymEnv(gym.Env):
         seed: int = 0,
         control_dt: float = 0.02,
         physics_dt: float = 0.002,
-        time_limit: float = float("inf"),
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
     ):
         self._model = mujoco.MjModel.from_xml_path(xml_path.as_posix())
@@ -55,7 +54,6 @@ class MujocoGymEnv(gym.Env):
         self._model.opt.timestep = physics_dt
         self._control_dt = control_dt
         self._n_substeps = int(control_dt // physics_dt)
-        self._time_limit = time_limit
         self._random = np.random.RandomState(seed)
         self._viewer: Optional[mujoco.Renderer] = None
         self._render_specs = render_spec
@@ -93,9 +91,6 @@ class MujocoGymEnv(gym.Env):
 
         self._viewer = None
 
-    def time_limit_exceeded(self) -> bool:
-        return self._data.time >= self._time_limit
-
     # Accessors.
 
     @property
@@ -128,7 +123,6 @@ class FrankaGymEnv(MujocoGymEnv):
         seed: int = 0,
         control_dt: float = 0.02,
         physics_dt: float = 0.002,
-        time_limit: float = 20.0,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
         render_mode: Literal["rgb_array", "human"] = "rgb_array",
         image_obs: bool = False,
@@ -143,7 +137,6 @@ class FrankaGymEnv(MujocoGymEnv):
             seed=seed,
             control_dt=control_dt,
             physics_dt=physics_dt,
-            time_limit=time_limit,
             render_spec=render_spec,
         )
 
