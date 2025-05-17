@@ -23,6 +23,7 @@ def wrap_env(
     show_ui: bool = True,
     gripper_penalty: float = -0.02,
     reset_delay_seconds: float = 1.0,
+    controller_config_path: str = None,
 ) -> gym.Env:
     """Apply wrappers to an environment based on configuration.
 
@@ -35,6 +36,7 @@ def wrap_env(
         step_size: Step size for movement in meters
         show_ui: Whether to show UI panels in the viewer
         gripper_penalty: Penalty for using the gripper
+        reset_delay_seconds: The number of seconds to delay during reset
         controller_config_path: Path to the controller configuration JSON file
 
     Returns:
@@ -59,6 +61,7 @@ def wrap_env(
         use_gripper=use_gripper,
         auto_reset=auto_reset,
         use_gamepad=use_gamepad,
+        controller_config_path=controller_config_path,
     )
 
     # Apply time delay wrapper
@@ -77,6 +80,7 @@ def make_env(
     show_ui: bool = True,
     gripper_penalty: float = -0.02,
     reset_delay_seconds: float = 1.0,
+    controller_config_path: str = None,
     **kwargs,
 ) -> gym.Env:
     """Create and wrap an environment in a single function.
@@ -90,6 +94,7 @@ def make_env(
         step_size: Step size for movement in meters
         show_ui: Whether to show UI panels in the viewer
         gripper_penalty: Penalty for using the gripper
+        reset_delay_seconds: The number of seconds to delay during reset
         controller_config_path: Path to the controller configuration JSON file
         **kwargs: Additional arguments to pass to the base environment
 
@@ -112,4 +117,5 @@ def make_env(
         show_ui=show_ui,
         gripper_penalty=gripper_penalty,
         reset_delay_seconds=reset_delay_seconds,
+        controller_config_path=controller_config_path,
     )
