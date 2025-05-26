@@ -80,7 +80,7 @@ def make_env(
     show_ui: bool = True,
     gripper_penalty: float = -0.02,
     reset_delay_seconds: float = 1.0,
-    controller_config_path: str = None,
+    controller_config_path: str | None = None,
     **kwargs,
 ) -> gym.Env:
     """Create and wrap an environment in a single function.

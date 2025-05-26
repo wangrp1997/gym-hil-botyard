@@ -15,86 +15,27 @@
 # limitations under the License.
 
 import json
-import os
-import logging
 from pathlib import Path
 
 
-def load_controller_config(controller_name=None, config_path=None):
+def load_controller_config(controller_name: str, config_path: str | None = None) -> dict:
     """
-    Load controller configuration from JSON file.
-    
+    Load controller configuration from a JSON file.
+
     Args:
-        controller_name: Name of the controller to load configuration for.
-                         If None, will use 'default' configuration.
-        config_path: Path to the controller configuration JSON file.
-                     If None, will look for controller_config.json in multiple locations.
-    
+        controller_name: Name of the controller to load.
+        config_path: Path to the config file. If None, uses the package's default config.
+
     Returns:
-        Dictionary containing controller configuration.
+        Dictionary containing the selected controller's configuration.
     """
-    # List of paths to check for the configuration file
-    paths_to_check = []
-    
-    # If a specific path is provided, check it first
-    if config_path is not None:
-        paths_to_check.append(Path(config_path))
-    
-    # Check in the current working directory
-    paths_to_check.append(Path.cwd() / "controller_config.json")
-    
-    # Check in the gym_hil package directory
-    module_dir = Path(__file__).parent.parent
-    paths_to_check.append(module_dir / "controller_config.json")
-    
-    # Try each path in order
-    config = None
-    for path in paths_to_check:
-        try:
-            with open(path, 'r') as f:
-                config = json.load(f)
-                logging.info(f"Loaded controller configuration from {path}")
-                break
-        except (FileNotFoundError, json.JSONDecodeError):
-            continue
-    
-    # If no configuration file was found, use default values
-    if config is None:
-        logging.warning("No controller configuration file found. Using default values.")
-        config = {
-            "default": {
-                "axes": {
-                    "left_x": 0,
-                    "left_y": 1,
-                    "right_x": 2,
-                    "right_y": 3
-                },
-                "buttons": {
-                    "a": 0,
-                    "b": 1,
-                    "x": 2,
-                    "y": 3,
-                    "lb": 4,
-                    "rb": 5,
-                    "lt": 6,
-                    "rt": 7
-                },
-                "axis_inversion": {
-                    "left_x": False,
-                    "left_y": True,
-                    "right_x": False,
-                    "right_y": True
-                }
-            }
-        }
-    
-    # If controller_name is None or not found in config, use default
-    if controller_name is None or controller_name not in config:
-        if controller_name is not None and controller_name not in config:
-            logging.warning(f"Controller '{controller_name}' not found in config. Using default configuration.")
-        return config.get("default", {})
-    
-    return config[controller_name]
+    if config_path is None:
+        config_path = Path(__file__).parent.parent / "controller_config.json"
+
+    with open(config_path) as f:
+        config = json.load(f)
+
+    return config[controller_name] if controller_name in config else config["default"]
 
 
 class InputController:
@@ -317,13 +258,15 @@ class GamepadController(InputController):
 
         # Load controller configuration based on joystick name
         self.controller_config = load_controller_config(joystick_name, self.config_path)
-        
+
         # Log the configuration being used
-        print(f"Using controller configuration for: {joystick_name if joystick_name in self.controller_config else 'default'}")
+        print(
+            f"Using controller configuration for: {joystick_name if joystick_name in self.controller_config else 'default'}"
+        )
 
         # Get button mappings from config
         buttons = self.controller_config.get("buttons", {})
-        
+
         print("Gamepad controls:")
         print(f"  {buttons.get('rb', 'RB')} button: Intervention")
         print("  Left analog stick: Move in X-Y plane")
@@ -402,17 +345,17 @@ class GamepadController(InputController):
             # Get axis mappings from config
             axes = self.controller_config.get("axes", {})
             axis_inversion = self.controller_config.get("axis_inversion", {})
-            
+
             # Get axis indices from config (with defaults if not found)
             left_x_axis = axes.get("left_x", 0)
             left_y_axis = axes.get("left_y", 1)
             right_y_axis = axes.get("right_y", 3)
-            
+
             # Get axis inversion settings (with defaults if not found)
             invert_left_x = axis_inversion.get("left_x", False)
             invert_left_y = axis_inversion.get("left_y", True)
             invert_right_y = axis_inversion.get("right_y", True)
-            
+
             # Read joystick axes
             x_input = self.joystick.get_axis(left_x_axis)  # Left/Right
             y_input = self.joystick.get_axis(left_y_axis)  # Up/Down
@@ -524,22 +467,25 @@ class GamepadControllerHID(InputController):
             # Load controller configuration based on product name
             controller_name = product if product else "default"
             self.controller_config = load_controller_config(controller_name, self.config_path)
-            
+
             # Log the configuration being used
-            print(f"Using controller configuration for: {controller_name if controller_name in self.controller_config else 'default'}")
+            print(
+                f"Using controller configuration for: {controller_name if controller_name in self.controller_config else 'default'}"
+            )
 
             # Get button mappings from config
             buttons = self.controller_config.get("buttons", {})
-            
+
             print("Gamepad controls (HID mode):")
+            print(f"  {buttons.get('rb', 'RB')} button: Intervention")
             print("  Left analog stick: Move in X-Y plane")
-            print("  Right analog stick: Move in Z axis (vertical)")
+            print("  Right analog stick (vertical): Move in Z axis")
+            print(f"  {buttons.get('lt', 'LT')} trigger: Close gripper")
+            print(f"  {buttons.get('rt', 'RT')} trigger: Open gripper")
             print(f"  {buttons.get('b', 'B')}/Circle button: Exit")
             print(f"  {buttons.get('y', 'Y')}/Triangle button: End episode with SUCCESS")
-            print(f"  {buttons.get('x', 'X')}/Square button: End episode with FAILURE")
-            print(f"  {buttons.get('rb', 'RB')} button: Intervention")
-            print(f"  RT trigger: Open gripper")
-            print(f"  LT trigger: Close gripper")
+            print(f"  {buttons.get('a', 'A')}/Cross button: End episode with FAILURE")
+            print(f"  {buttons.get('x', 'X')}/Square button: Rerecord episode")
 
         except OSError as e:
             print(f"Error opening gamepad: {e}")
@@ -572,20 +518,23 @@ class GamepadControllerHID(InputController):
 
             # Read data from the gamepad
             data = self.device.read(64)
-            
+
             # Interpret gamepad data - this will vary by controller model
             if data and len(data) >= 8:
                 # Get axis mappings from config
                 axes = self.controller_config.get("axes", {})
-                
-                # Default data indices for Logitech RumblePad 2
-                left_x_idx = 1
-                left_y_idx = 2
-                right_x_idx = 3
-                right_y_idx = 4
+
+                # Get axis indices from config (with defaults if not found)
+                # For HID controllers, these are data array indices, not axis numbers
+                left_x_idx = axes.get("left_x", 1)  # Default to 1 for Logitech RumblePad 2
+                left_y_idx = axes.get("left_y", 2)  # Default to 2 for Logitech RumblePad 2
+                right_x_idx = axes.get("right_x", 3)  # Default to 3 for Logitech RumblePad 2
+                right_y_idx = axes.get("right_y", 4)  # Default to 4 for Logitech RumblePad 2
+
+                # Default indices for button data and triggers
                 buttons_idx = 5
                 triggers_idx = 6
-                
+
                 # Normalize joystick values from 0-255 to -1.0-1.0
                 self.left_x = (data[left_x_idx] - 128) / 128.0
                 self.left_y = (data[left_y_idx] - 128) / 128.0
@@ -611,31 +560,33 @@ class GamepadControllerHID(InputController):
 
                 # Parse button states
                 buttons_data = data[buttons_idx]
-                
+
                 # Get button mappings from config
                 button_config = self.controller_config.get("buttons", {})
-                
-                # For HID controllers, we're using bit positions for buttons
-                # These are specific to the Logitech RumblePad 2 by default
-                y_bit = 7  # Triangle/Y button
-                x_bit = 5  # Square/X button
-                a_bit = 4  # Cross/A button
-                
+
+                # Map button names to bit positions (with defaults for Logitech RumblePad 2)
+                y_bit = button_config.get("y", 7)  # Default to bit 7 for Y/Triangle
+                x_bit = button_config.get("x", 5)  # Default to bit 5 for X/Square
+                a_bit = button_config.get("a", 4)  # Default to bit 4 for A/Cross
+
                 # Check for intervention flag (RB button)
-                # This is controller-specific and may need adjustment
-                self.intervention_flag = data[triggers_idx] in [2, 6, 10, 14]
+                # Use the button_config to determine which trigger value indicates RB
+                rb_trigger_values = [2, 6, 10, 14]  # Default values for Logitech RumblePad 2
+                self.intervention_flag = data[triggers_idx] in rb_trigger_values
 
                 # Check for gripper commands (RT and LT triggers)
-                # This is controller-specific and may need adjustment
-                self.open_gripper_command = data[triggers_idx] in [8, 10, 12]
-                self.close_gripper_command = data[triggers_idx] in [4, 6, 12]
+                # Use the button_config to determine which trigger values indicate RT and LT
+                rt_trigger_values = [8, 10, 12]  # Default values for Logitech RumblePad 2
+                lt_trigger_values = [4, 6, 12]  # Default values for Logitech RumblePad 2
+                self.open_gripper_command = data[triggers_idx] in rt_trigger_values
+                self.close_gripper_command = data[triggers_idx] in lt_trigger_values
 
                 # Check episode status buttons
                 if buttons_data & (1 << y_bit):
                     self.episode_end_status = "success"
-                elif buttons_data & (1 << x_bit):
-                    self.episode_end_status = "failure"
                 elif buttons_data & (1 << a_bit):
+                    self.episode_end_status = "failure"
+                elif buttons_data & (1 << x_bit):
                     self.episode_end_status = "rerecord_episode"
                 else:
                     self.episode_end_status = None

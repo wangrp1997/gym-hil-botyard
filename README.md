@@ -97,19 +97,25 @@ python examples/test_teleoperation.py
 
 To run the teleoperation with keyboard you can use the option `--use-keyboard`.
 
-### Controller Configuration
+### Human-in-the-Loop Wrappers
 
-You can customize gamepad button and axis mappings by providing a controller configuration file:
+The `hil_wrappers.py` module provides wrappers for human-in-the-loop interaction:
+
+- **EEActionWrapper**: Transforms actions to end-effector space for intuitive control
+- **InputsControlWrapper**: Adds gamepad or keyboard control for teleoperation
+- **GripperPenaltyWrapper**: Optional wrapper to add penalties for excessive gripper actions
+
+These wrappers make it easy to build environments for human demonstrations and interactive learning.
+
+## Controller Configuration
+
+You can customize gamepad button and axis mappings by providing a controller configuration file.
 
 ```bash
 python examples/test_teleoperation.py --controller-config path/to/controller_config.json
 ```
 
-When using gym-hil as an installed package, you can create a `controller_config.json` file in your project directory, or specify a custom path. The system will look for the configuration file in the following locations (in order):
-
-1. The path specified with the `--controller-config` argument
-2. A file named `controller_config.json` in the current working directory
-3. The default configuration file included with the package
+If no path is specified, the default configuration file bundled with the package (`controller_config.json`) will be used.
 
 You can also pass the configuration path when creating an environment in your code:
 
@@ -121,17 +127,52 @@ env = gym.make(
 )
 ```
 
-See [CONTROLLER_CONFIG.md](gym_hil/CONTROLLER_CONFIG.md) for more details on the configuration file format and how to customize it for different controllers.
+To add a new controller, run the script, copy the controller name from the console, add it to the JSON config, and rerun the script.
 
-### Human-in-the-Loop Wrappers
+The default controls are:
 
-The `hil_wrappers.py` module provides wrappers for human-in-the-loop interaction:
+- Left analog stick: Move in X-Y plane
+- Right analog stick (vertical): Move in Z axis
+- RB button: Toggle intervention mode
+- LT button: Close gripper
+- RT button: Open gripper
+- Y/Triangle button: End episode with SUCCESS
+- A/Cross button: End episode with FAILURE
+- X/Square button: Rerecord episode
 
-- **EEActionWrapper**: Transforms actions to end-effector space for intuitive control
-- **InputsControlWrapper**: Adds gamepad or keyboard control for teleoperation
-- **GripperPenaltyWrapper**: Optional wrapper to add penalties for excessive gripper actions
+The configuration file is a JSON file with the following structure:
 
-These wrappers make it easy to build environments for human demonstrations and interactive learning.
+```json
+{
+  "default": {
+    "axes": {
+      "left_x": 0,
+      "left_y": 1,
+      "right_x": 2,
+      "right_y": 3
+    },
+    "buttons": {
+      "a": 1,
+      "b": 2,
+      "x": 0,
+      "y": 3,
+      "lb": 4,
+      "rb": 5,
+      "lt": 6,
+      "rt": 7
+    },
+    "axis_inversion": {
+      "left_x": false,
+      "left_y": true,
+      "right_x": false,
+      "right_y": true
+    }
+  },
+  "Xbox 360 Controller": {
+    ...
+  }
+}
+```
 
 ## LeRobot Compatibility
 
