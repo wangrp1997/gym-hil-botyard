@@ -92,7 +92,7 @@ imageio.mimsave("franka_render_test.mp4", frames, fps=20)
 For Franka environments, you can use the gamepad or keyboard to control the robot:
 
 ```bash
-python gym_hil/examples/test_teleoperation.py
+python examples/test_teleoperation.py
 ```
 
 To run the teleoperation with keyboard you can use the option `--use-keyboard`.
@@ -106,6 +106,73 @@ The `hil_wrappers.py` module provides wrappers for human-in-the-loop interaction
 - **GripperPenaltyWrapper**: Optional wrapper to add penalties for excessive gripper actions
 
 These wrappers make it easy to build environments for human demonstrations and interactive learning.
+
+## Controller Configuration
+
+You can customize gamepad button and axis mappings by providing a controller configuration file.
+
+```bash
+python examples/test_teleoperation.py --controller-config path/to/controller_config.json
+```
+
+If no path is specified, the default configuration file bundled with the package (`controller_config.json`) will be used.
+
+You can also pass the configuration path when creating an environment in your code:
+
+```python
+env = gym.make(
+    "gym_hil/PandaPickCubeGamepad-v0",
+    controller_config_path="path/to/controller_config.json",
+    # other parameters...
+)
+```
+
+To add a new controller, run the script, copy the controller name from the console, add it to the JSON config, and rerun the script.
+
+The default controls are:
+
+- Left analog stick: Move in X-Y plane
+- Right analog stick (vertical): Move in Z axis
+- RB button: Toggle intervention mode
+- LT button: Close gripper
+- RT button: Open gripper
+- Y/Triangle button: End episode with SUCCESS
+- A/Cross button: End episode with FAILURE
+- X/Square button: Rerecord episode
+
+The configuration file is a JSON file with the following structure:
+
+```json
+{
+  "default": {
+    "axes": {
+      "left_x": 0,
+      "left_y": 1,
+      "right_x": 2,
+      "right_y": 3
+    },
+    "buttons": {
+      "a": 1,
+      "b": 2,
+      "x": 0,
+      "y": 3,
+      "lb": 4,
+      "rb": 5,
+      "lt": 6,
+      "rt": 7
+    },
+    "axis_inversion": {
+      "left_x": false,
+      "left_y": true,
+      "right_x": false,
+      "right_y": true
+    }
+  },
+  "Xbox 360 Controller": {
+    ...
+  }
+}
+```
 
 ## LeRobot Compatibility
 

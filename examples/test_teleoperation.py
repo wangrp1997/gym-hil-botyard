@@ -36,6 +36,9 @@ def main():
         default=2.0,
         help="Delay in seconds when resetting the environment (0.0 means no delay)",
     )
+    parser.add_argument(
+        "--controller-config", type=str, default=None, help="Path to controller configuration JSON file"
+    )
     args = parser.parse_args()
 
     # Create Franka environment - Use base environment first to debug
@@ -63,7 +66,6 @@ def main():
         step_size=args.step_size,
         use_gamepad=not args.use_keyboard,
         max_episode_steps=1000,  # 100 seconds * 10Hz
-        reset_delay_seconds=args.reset_delay,
     )
 
     # Print observation space for the wrapped environment
