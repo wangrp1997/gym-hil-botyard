@@ -22,6 +22,7 @@ import numpy as np
 
 import gym_hil  # noqa: F401
 
+
 def main():
     parser = argparse.ArgumentParser(description="Control Franka robot interactively")
     parser.add_argument("--step-size", type=float, default=0.01, help="Step size for movement in meters")
@@ -64,7 +65,7 @@ def main():
     else:
         # Use gamepad environment with PassiveViewerWrapper
         env_id = "gym_hil/PandaPickCubeGamepad-v0"
-    
+
     env = gym.make(
         env_id,
         render_mode=args.render_mode,
