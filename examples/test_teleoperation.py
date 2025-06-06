@@ -22,7 +22,6 @@ import numpy as np
 
 import gym_hil  # noqa: F401
 
-
 def main():
     parser = argparse.ArgumentParser(description="Control Franka robot interactively")
     parser.add_argument("--step-size", type=float, default=0.01, help="Step size for movement in meters")
@@ -57,10 +56,17 @@ def main():
     if "pixels" in obs:
         print("Pixels keys:", list(obs["pixels"].keys()))
 
-    # Now try with the wrapped version
-    print("\nTrying wrapped environment...")
+    # Use the appropriate environment based on control method
+    if args.use_keyboard:
+        # Use keyboard-specific environment that doesn't have PassiveViewerWrapper
+        # to avoid keyboard event conflicts on macOS
+        env_id = "gym_hil/PandaPickCubeKeyboard-v0"
+    else:
+        # Use gamepad environment with PassiveViewerWrapper
+        env_id = "gym_hil/PandaPickCubeGamepad-v0"
+    
     env = gym.make(
-        "gym_hil/PandaPickCubeGamepad-v0",
+        env_id,
         render_mode=args.render_mode,
         image_obs=True,
         use_gamepad=not args.use_keyboard,
