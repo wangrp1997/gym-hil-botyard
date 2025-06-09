@@ -57,15 +57,9 @@ def main():
     if "pixels" in obs:
         print("Pixels keys:", list(obs["pixels"].keys()))
 
-    # Use the appropriate environment based on control method
-    if args.use_keyboard:
-        # Use keyboard-specific environment that doesn't have PassiveViewerWrapper
-        # to avoid keyboard event conflicts on macOS
-        env_id = "gym_hil/PandaPickCubeKeyboard-v0"
-    else:
-        # Use gamepad environment with PassiveViewerWrapper
-        env_id = "gym_hil/PandaPickCubeGamepad-v0"
-
+    # Now try with the wrapped version
+    print("\nTrying wrapped environment...")
+    env_id = "gym_hil/PandaPickCubeKeyboard-v0" if args.use_keyboard else "gym_hil/PandaPickCubeGamepad-v0"
     env = gym.make(
         env_id,
         render_mode=args.render_mode,
