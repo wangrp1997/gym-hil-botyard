@@ -377,36 +377,35 @@
       <motor class="panda" name="actuator5" joint="joint5" ctrlrange="-12 12"/>
       <motor class="panda" name="actuator6" joint="joint6" ctrlrange="-12 12"/>
       <motor class="panda" name="actuator7" joint="joint7" ctrlrange="-12 12"/>
-      <!-- <general class="2f85" name="fingers_actuator" tendon="split" forcerange="-5 5" ctrlrange="0 255"
-        gainprm="0.3137255 0 0" biasprm="0 -100 -10"/> -->
-      <motor name="FAJ3" joint="FAJ3" ctrlrange="-2 2"/>
-      <motor name="FAJ1" joint="FAJ1" ctrlrange="-2 2"/>
       
-      <motor name="THJ4" joint="THJ4" ctrlrange="-2 2"/>
-      <motor name="THJ3" joint="THJ3" ctrlrange="-2 2"/>
-      <motor name="THJ2" joint="THJ2" ctrlrange="-2 2"/>
-      <motor name="THJ1" joint="THJ1" ctrlrange="-2 2"/>
+      <position name="FAJ3" joint="FAJ3" kp="50" kv="10" gear="1" ctrlrange="-1.57 1.57"/>
+      <position name="FAJ1" joint="FAJ1" kp="50" kv="10" gear="1" ctrlrange="-1.57 1.57"/>
       
-      <motor name="FFJ4" joint="FFJ4" ctrlrange="-2 2"/>
-      <motor name="FFJ3" joint="FFJ3" ctrlrange="-2 2"/>
-      <motor name="FFJ2" joint="FFJ2" ctrlrange="-2 2"/>
-      <motor name="FFJ1" joint="FFJ1" ctrlrange="-2 2"/>
+      <position name="THJ4" joint="THJ4" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="THJ3" joint="THJ3" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="THJ2" joint="THJ2" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="THJ1" joint="THJ1" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
       
-      <motor name="MFJ4" joint="MFJ4" ctrlrange="-2 2"/>
-      <motor name="MFJ3" joint="MFJ3" ctrlrange="-2 2"/>
-      <motor name="MFJ2" joint="MFJ2" ctrlrange="-2 2"/>
-      <motor name="MFJ1" joint="MFJ1" ctrlrange="-2 2"/>
+      <position name="FFJ4" joint="FFJ4" kp="50" kv="10" gear="1" ctrlrange="-0.26 0.26"/>
+      <position name="FFJ3" joint="FFJ3" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="FFJ2" joint="FFJ2" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="FFJ1" joint="FFJ1" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
       
-      <motor name="RFJ4" joint="RFJ4" ctrlrange="-2 2"/>
-      <motor name="RFJ3" joint="RFJ3" ctrlrange="-2 2"/>
-      <motor name="RFJ2" joint="RFJ2" ctrlrange="-2 2"/>
-      <motor name="RFJ1" joint="RFJ1" ctrlrange="-2 2"/>
+      <position name="MFJ4" joint="MFJ4" kp="50" kv="10" gear="1" ctrlrange="-0.26 0.26"/>
+      <position name="MFJ3" joint="MFJ3" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="MFJ2" joint="MFJ2" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="MFJ1" joint="MFJ1" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
       
-      <motor name="LFJ5" joint="LFJ5" ctrlrange="-2 2"/>
-      <motor name="LFJ4" joint="LFJ4" ctrlrange="-2 2"/>
-      <motor name="LFJ3" joint="LFJ3" ctrlrange="-2 2"/>
-      <motor name="LFJ2" joint="LFJ2" ctrlrange="-2 2"/>
-      <motor name="LFJ1" joint="LFJ1" ctrlrange="-2 2"/>
+      <position name="RFJ4" joint="RFJ4" kp="50" kv="10" gear="1" ctrlrange="-0.26 0.26"/>
+      <position name="RFJ3" joint="RFJ3" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="RFJ2" joint="RFJ2" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="RFJ1" joint="RFJ1" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      
+      <position name="LFJ5" joint="LFJ5" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="LFJ4" joint="LFJ4" kp="50" kv="10" gear="1" ctrlrange="-0.26 0.26"/>
+      <position name="LFJ3" joint="LFJ3" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="LFJ2" joint="LFJ2" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
+      <position name="LFJ1" joint="LFJ1" kp="50" kv="10" gear="1" ctrlrange="0 1.57"/>
     </actuator>
 
     <sensor>
