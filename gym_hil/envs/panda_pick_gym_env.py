@@ -22,8 +22,8 @@ from gymnasium import spaces
 
 from gym_hil.mujoco_gym_env import FrankaGymEnv, GymRenderingSpec
 
-_PANDA_HOME = np.asarray((0, 0.195, 0, -2.43, 0, 2.62, 0.785))
-_CARTESIAN_BOUNDS = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]])
+_PANDA_HOME = np.asarray((0, -0.785, 0, -3, 0, 3.14, -0.785))
+_CARTESIAN_BOUNDS = np.asarray([[0.2, -0.3, 0], [0.8, 0.3, 0.5]])
 _SAMPLING_BOUNDS = np.asarray([[0.3, -0.15], [0.5, 0.15]])
 
 
@@ -39,7 +39,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         render_mode: Literal["rgb_array", "human"] = "rgb_array",
         image_obs: bool = False,
         reward_type: str = "sparse",
-        random_block_position: bool = False,
+        random_block_position: bool = True,
     ):
         self.reward_type = reward_type
 
@@ -192,7 +192,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
     def _is_success(self) -> bool:
         """Check if the task is successfully completed."""
         block_pos = self._data.sensor("block_pos").data
-        tcp_pos = self._data.sensor("2f85/pinch_pos").data
+        tcp_pos = self._data.sensor("botyard/pinch_pos").data
         dist = np.linalg.norm(block_pos - tcp_pos)
         lift = block_pos[2] - self._z_init
         return dist < 0.05 and lift > 0.1

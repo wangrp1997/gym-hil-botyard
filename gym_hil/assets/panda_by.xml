@@ -216,6 +216,11 @@
                         <camera name="handcam_rgb" pos="-0.05 0.015 0" fovy="42.5" quat="0 1 -1 0"/>
                         <site name="attachment_site" quat="0 0 0 1"/>
                         <body name="base_mount" quat="-1 0 0 1">
+                        <body name="pinch_body" pos="0.0 0.0 0.33">
+                          <geom type="sphere" size="0.01" rgba="1 0 0 1"/>
+                          <!-- <site name="sensor12_site_1" type="sphere" size="0.002" pos="0 0 0" rgba="0 0 0 1"/> -->
+                          <site name="pinch" pos="0 0 0" size="0.01" rgba="1 0 0 1"/>
+                        </body>
                           <geom type="mesh" rgba="0.1 0.1 0.1 1" mesh="fabase"/>
                           <body name="falink2" pos="0 0.028001 0.1905" quat="0.707105 0 0 0.707108">
                             <inertial pos="-0.0047988 -0.000564323 0.026592" quat="0.98377 -0.00522689 -0.157878 0.0851093" mass="0.00600673" diaginertia="1.50497e-06 1.46337e-06 2.28978e-07"/>
@@ -435,9 +440,9 @@
 
       <force name="panda/wrist_force" site="attachment_site"/>
 
-      <!-- <framepos name="2f85/pinch_pos" objtype="site" objname="pinch"/>
-      <framequat name="2f85/pinch_quat" objtype="site" objname="pinch"/>
-      <framelinvel name="2f85/pinch_vel" objtype="site" objname="pinch"/>
-      <frameangvel name="2f85/pinch_angvel" objtype="site" objname="pinch"/> -->
+      <framepos name="botyard/pinch_pos" objtype="site" objname="pinch"/>
+      <framequat name="botyard/pinch_quat" objtype="site" objname="pinch"/>
+      <framelinvel name="botyard/pinch_vel" objtype="site" objname="pinch"/>
+      <frameangvel name="botyard/pinch_angvel" objtype="site" objname="pinch"/>
     </sensor>
   </mujoco>

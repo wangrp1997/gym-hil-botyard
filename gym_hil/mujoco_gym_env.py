@@ -25,7 +25,7 @@ from gymnasium import spaces
 
 from gym_hil.controllers import opspace
 
-MAX_GRIPPER_COMMAND = 255
+MAX_GRIPPER_COMMAND = 1.57
 
 
 @dataclass(frozen=True)
@@ -130,7 +130,7 @@ class FrankaGymEnv(MujocoGymEnv):
         cartesian_bounds: np.ndarray = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]]),  # noqa: B008
     ):
         if xml_path is None:
-            xml_path = Path(__file__).parent.parent / "gym_hil" / "assets" / "scene.xml"
+            xml_path = Path(__file__).parent.parent / "gym_hil" / "assets" / "scene_by.xml"
 
         super().__init__(
             xml_path=xml_path,
@@ -161,7 +161,16 @@ class FrankaGymEnv(MujocoGymEnv):
         # Cache robot IDs
         self._panda_dof_ids = np.asarray([self._model.joint(f"joint{i}").id for i in range(1, 8)])
         self._panda_ctrl_ids = np.asarray([self._model.actuator(f"actuator{i}").id for i in range(1, 8)])
-        self._gripper_ctrl_id = self._model.actuator("fingers_actuator").id
+
+        ctrl_joint_names = ["THJ4", "THJ3", "THJ2", "THJ1",
+                            "FFJ3", "FFJ2", "FFJ1",
+                            "MFJ3", "MFJ2", "MFJ1",
+                            "RFJ3", "RFJ2", "RFJ1",
+                            "LFJ4", "LFJ3", "LFJ2", "LFJ1"]
+
+        self._gripper_ctrl_ids = [
+            self._model.actuator(name).id for name in ctrl_joint_names
+        ]
         self._pinch_site_id = self._model.site("pinch").id
 
         # Setup observation and action spaces
@@ -222,10 +231,10 @@ class FrankaGymEnv(MujocoGymEnv):
         self._data.qpos[self._panda_dof_ids] = self._home_position
         self._data.ctrl[self._panda_ctrl_ids] = 0.0
         mujoco.mj_forward(self._model, self._data)
-
         # Reset mocap body to home position
-        tcp_pos = self._data.sensor("2f85/pinch_pos").data
+        tcp_pos = self._data.sensor("botyard/pinch_pos").data
         self._data.mocap_pos[0] = tcp_pos
+        self._data.mocap_quat[0] = self._data.sensor("botyard/pinch_quat").data
 
     def apply_action(self, action):
         """Apply the action to the robot."""
@@ -238,9 +247,9 @@ class FrankaGymEnv(MujocoGymEnv):
         self._data.mocap_pos[0] = npos
 
         # Set gripper grasp
-        g = self._data.ctrl[self._gripper_ctrl_id] / MAX_GRIPPER_COMMAND
+        g = self._data.ctrl[self._gripper_ctrl_ids] / MAX_GRIPPER_COMMAND
         ng = np.clip(g + grasp_command, 0.0, 1.0)
-        self._data.ctrl[self._gripper_ctrl_id] = ng * MAX_GRIPPER_COMMAND
+        self._data.ctrl[self._gripper_ctrl_ids] = ng * MAX_GRIPPER_COMMAND
 
         # Apply operational space control
         for _ in range(self._n_substeps):
@@ -259,7 +268,7 @@ class FrankaGymEnv(MujocoGymEnv):
 
     def get_robot_state(self):
         """Get the current state of the robot."""
-        tcp_pos = self._data.sensor("2f85/pinch_pos").data
+        tcp_pos = self._data.sensor("botyard/pinch_pos").data
         # tcp_quat = self._data.sensor("2f85/pinch_quat").data
         # tcp_vel = self._data.sensor("2f85/pinch_vel").data
         # tcp_angvel = self._data.sensor("2f85/pinch_angvel").data
@@ -279,4 +288,4 @@ class FrankaGymEnv(MujocoGymEnv):
 
     def get_gripper_pose(self):
         """Get the current pose of the gripper."""
-        return np.array([self._data.ctrl[self._gripper_ctrl_id]], dtype=np.float32)
+        return np.array([self._data.ctrl[ctrl_id] for ctrl_id in self._gripper_ctrl_ids], dtype=np.float32)
