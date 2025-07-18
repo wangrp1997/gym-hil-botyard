@@ -99,7 +99,6 @@ class EEActionWrapper(gym.ActionWrapper):
         if self.use_gripper:
             # NOTE: Normalize gripper action from [0, 2] -> [-1, 1]
             gripper_open_command = [action[-1] - 1.0]
-
         action = np.concatenate([action_xyz, actions_orn, gripper_open_command])
         return action
 
@@ -192,9 +191,9 @@ class InputsControlWrapper(gym.Wrapper):
 
         if self.use_gripper:
             gripper_command = self.controller.gripper_command()
-            if gripper_command == "open":
-                gamepad_action = np.concatenate([gamepad_action, [2.0]])
-            elif gripper_command == "close":
+            if gripper_command == "close":
+                gamepad_action = np.concatenate([gamepad_action, [1.4]])
+            elif gripper_command == "open":
                 gamepad_action = np.concatenate([gamepad_action, [0.0]])
             else:
                 gamepad_action = np.concatenate([gamepad_action, [1.0]])
