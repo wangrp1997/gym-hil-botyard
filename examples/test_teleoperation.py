@@ -21,13 +21,14 @@ import gymnasium as gym
 import numpy as np
 
 import gym_hil  # noqa: F401
+import cv2
 
 
 def main():
     parser = argparse.ArgumentParser(description="Control Franka robot interactively")
     parser.add_argument("--step-size", type=float, default=0.01, help="Step size for movement in meters")
     parser.add_argument(
-        "--render-mode", type=str, default="human", choices=["human", "rgb_array"], help="Rendering mode"
+        "--render-mode", type=str, default="rgb_array", choices=["human", "rgb_array"], help="Rendering mode"
     )
     parser.add_argument("--use-keyboard", action="store_true", help="Use keyboard control")
     parser.add_argument(
@@ -53,6 +54,7 @@ def main():
 
     # Reset and check observation structure
     obs, _ = env.reset()
+
     print("Observation keys:", list(obs.keys()))
     if "pixels" in obs:
         print("Pixels keys:", list(obs["pixels"].keys()))
@@ -77,6 +79,7 @@ def main():
 
     # Reset environment
     obs, _ = env.reset()
+
     dummy_action = np.zeros(4, dtype=np.float32)
     # This ensures the "stay gripper" action is set when the intervention button is not pressed
     dummy_action[-1] = 1
@@ -85,8 +88,21 @@ def main():
         while True:
             # Step the environment
             obs, reward, terminated, truncated, info = env.step(dummy_action)
-
-            # Print some feedback
+            
+            # 获取相机图像
+            front_img = obs['pixels']['front']
+            wrist_img = obs['pixels']['wrist']
+            
+            # 显示图像
+            cv2.imshow('Front Camera', front_img)
+            cv2.imshow('Wrist Camera', wrist_img)
+            
+            # 等待按键，按 'q' 退出
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                break
+            
+            # 打印一些反馈
             if info.get("succeed", False):
                 print("\nSuccess! Block has been picked up.")
 
@@ -103,6 +119,9 @@ def main():
     finally:
         env.close()
         print("Session ended")
+
+    # 清理窗口
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

@@ -31,12 +31,18 @@ We use [HIL-SERL](https://hil-serl.github.io/) from [LeRobot](https://github.com
 The policy was trained for **10 minutes** with human in the loop.
 After only 10 minutes of training, the policy successfully performs the task.
 
+
 ## 创建ur16e的xml文件(需要下载ur官方的机器人描述包)
 
 ```bash
 ros2 run xacro xacro ur.urdf.xacro ur_type:=ur16e name:=ur16e -o ur16e.urdf
 sed -i 's|package://ur_description|ur16e|g' ur16e.urdf
 ```
+
+## 实时渲染相机视角
+
+[refs](https://blog.csdn.net/weixin_38428827/article/details/147622260)
+
 
 ## Installation
 

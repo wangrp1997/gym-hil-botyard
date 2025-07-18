@@ -22,7 +22,7 @@ import gymnasium as gym
 import mujoco
 import numpy as np
 from gymnasium import spaces
-
+import time
 from gym_hil.controllers import opspace
 
 MAX_GRIPPER_COMMAND = 1.57
@@ -124,8 +124,8 @@ class FrankaGymEnv(MujocoGymEnv):
         control_dt: float = 0.02,
         physics_dt: float = 0.002,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
-        render_mode: Literal["rgb_array", "human"] = "rgb_array",
-        image_obs: bool = False,
+        render_mode: Literal["rgb_array", "human"] = "human",
+        image_obs: bool = True,
         home_position: np.ndarray = np.asarray((0, -0.785, 0, -2.35, 0, 1.57, np.pi / 4)),  # noqa: B008
         cartesian_bounds: np.ndarray = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]]),  # noqa: B008
     ):
@@ -162,7 +162,7 @@ class FrankaGymEnv(MujocoGymEnv):
         self._panda_dof_ids = np.asarray([self._model.joint(f"joint{i}").id for i in range(1, 8)])
         self._panda_ctrl_ids = np.asarray([self._model.actuator(f"actuator{i}").id for i in range(1, 8)])
 
-        ctrl_joint_names = ["THJ4", "THJ2", "THJ1",
+        ctrl_joint_names = ["THJ2", "THJ1",
                             "FFJ3", "FFJ2", "FFJ1",
                             "MFJ3", "MFJ2", "MFJ1",
                             "RFJ3", "RFJ2", "RFJ1",
@@ -229,6 +229,11 @@ class FrankaGymEnv(MujocoGymEnv):
     def reset_robot(self):
         """Reset the robot to home position."""
         self._data.qpos[self._panda_dof_ids] = self._home_position
+        # 设置 THJ4 的初始角度为 90 度
+        thj4_id = self._model.joint("THJ4").id
+        self._data.qpos[thj4_id] = 1.57
+        self._data.ctrl[thj4_id] = 255
+
         self._data.ctrl[self._panda_ctrl_ids] = 0.0
         mujoco.mj_forward(self._model, self._data)
         # Reset mocap body to home position
@@ -281,10 +286,14 @@ class FrankaGymEnv(MujocoGymEnv):
     def render(self):
         """Render the environment and return frames from multiple cameras."""
         rendered_frames = []
+
         for cam_id in self.camera_id:
             self._viewer.update_scene(self.data, camera=cam_id)
+            a = self._viewer.render()
             rendered_frames.append(self._viewer.render())
+
         return rendered_frames
+
 
     def get_gripper_pose(self):
         """Get the current pose of the gripper."""

@@ -212,15 +212,15 @@
                       <geom mesh="link7_7" material="white" class="panda/visual"/>
                       <geom mesh="link7_c" class="panda/collision"/>
                       <body name="attachment" pos="0 0 0.107" quat="0.3826834 0 0 0.9238795">
-                        <camera name="handcam_depth" pos="-0.05 0 0" fovy="62" quat="0 1 -1 0"/>
-                        <camera name="handcam_rgb" pos="-0.05 0.015 0" fovy="42.5" quat="0 1 -1 0"/>
+                        <camera name="handcam_depth" pos="-0.1 -0.02 0" fovy="62" quat="0 1 -1 0"/>
+                        <camera name="handcam_rgb" pos="-0.1 0.02 0" fovy="42.5" quat="0 1 -1 0"/>
                         <site name="attachment_site" quat="0 0 0 1"/>
-                        <body name="base_mount" quat="-1 0 0 1">
-                        <body name="pinch_body" pos="0.0 0.0 0.33">
-                          <geom type="sphere" size="0.01" rgba="1 0 0 1"/>
+                        <body name="base_mount" quat="0 0 0 1">
+                        <!-- <body name="pinch_body" pos="0.0 0.0 0.33"> -->
+                          <!-- <geom type="sphere" size="0.01" rgba="1 0 0 1"/> -->
                           <!-- <site name="sensor12_site_1" type="sphere" size="0.002" pos="0 0 0" rgba="0 0 0 1"/> -->
-                          <site name="pinch" pos="0 0 0" size="0.01" rgba="1 0 0 1"/>
-                        </body>
+                          <site name="pinch" pos="0 0 0.33" type="sphere" size="0.01" rgba="1 0 0 1"/>
+                        <!-- </body> -->
                           <geom type="mesh" rgba="0.1 0.1 0.1 1" mesh="fabase"/>
                           <body name="falink2" pos="0 0.028001 0.1905" quat="0.707105 0 0 0.707108">
                             <inertial pos="-0.0047988 -0.000564323 0.026592" quat="0.98377 -0.00522689 -0.157878 0.0851093" mass="0.00600673" diaginertia="1.50497e-06 1.46337e-06 2.28978e-07"/>
@@ -231,7 +231,9 @@
                               <inertial pos="0.00386965 -0.0201676 0.043105" quat="0.708131 0.0605489 0.105728 0.69549" mass="0.0350022" diaginertia="2.98712e-05 2.33619e-05 1.0617e-05"/>
                               <joint name="FAJ1" pos="0 0 0" axis="-1 0 0" range="-1.5708 1.5708" actuatorfrcrange="-10 10"/>
                               <geom type="mesh" rgba="0.1 0.1 0.1 1" mesh="pmbase"/>
-                              <geom pos="0 -0.0193 0.01" quat="1 0 0 0" type="mesh" rgba="0.1 0.1 0.1 1" mesh="palm"/>
+                              <body name="palm" pos="0 -0.0193 0.01" quat="1 0 0 0">
+                                  <geom type="mesh" rgba="0.1 0.1 0.1 1" mesh="palm"/>
+                              </body>
                               <body name="thbase" pos="0.026851 -0.00615 0.048" quat="9.38184e-07 0.707105 -9.38187e-07 0.707108">
                                 <inertial pos="-0.00179429 2.09601e-08 0.00147249" quat="0 0.703958 0 0.710242" mass="0.00644353" diaginertia="8.14254e-07 6.9643e-07 5.42691e-07"/>
                                 <joint name="THJ4" pos="0 0 0" axis="1 0 0" range="0 1.5708" actuatorfrcrange="-10 10"/>
@@ -351,14 +353,9 @@
       </body>
     </worldbody>
 
-    <!-- <contact>
-      <exclude body1="base" body2="left_driver"/>
-      <exclude body1="base" body2="right_driver"/>
-      <exclude body1="base" body2="left_spring_link"/>
-      <exclude body1="base" body2="right_spring_link"/>
-      <exclude body1="right_coupler" body2="right_follower"/>
-      <exclude body1="left_coupler" body2="left_follower"/>
-    </contact> -->
+    <contact>
+      <exclude body1="palm" body2="thproximal"/>
+    </contact>
 
     <!-- <tendon>
       <fixed name="split">

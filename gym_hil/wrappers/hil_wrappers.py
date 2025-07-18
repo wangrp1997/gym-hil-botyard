@@ -39,7 +39,6 @@ class GripperPenaltyWrapper(gym.Wrapper):
 
     def step(self, action):
         observation, reward, terminated, truncated, info = self.env.step(action)
-
         info["discrete_penalty"] = 0.0
         a = np.atleast_1d(action[-1])
         last = np.atleast_1d(self.last_gripper_pos)

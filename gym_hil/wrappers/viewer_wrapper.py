@@ -35,7 +35,6 @@ class PassiveViewerWrapper(gym.Wrapper):
     def __init__(
         self,
         env: gym.Env,
-        *,
         show_left_ui: bool = False,
         show_right_ui: bool = False,
     ) -> None:
