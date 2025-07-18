@@ -22,7 +22,7 @@ from gymnasium import spaces
 
 from gym_hil.mujoco_gym_env import FrankaGymEnv, GymRenderingSpec
 
-_PANDA_HOME = np.asarray((0, -0.785, 0, -3, 0, 3.14, -0.785))
+_PANDA_HOME = np.asarray((0, -0.785, 0, -2.37, 1.57, 3.14, -2.35))
 _CARTESIAN_BOUNDS = np.asarray([[0.2, -0.3, 0], [0.8, 0.3, 0.5]])
 _SAMPLING_BOUNDS = np.asarray([[0.3, -0.15], [0.5, 0.15]])
 

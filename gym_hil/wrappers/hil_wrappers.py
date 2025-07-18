@@ -41,10 +41,12 @@ class GripperPenaltyWrapper(gym.Wrapper):
         observation, reward, terminated, truncated, info = self.env.step(action)
 
         info["discrete_penalty"] = 0.0
-        if (action[-1] < -0.5 and self.last_gripper_pos > 0.9) or (
-            action[-1] > 0.5 and self.last_gripper_pos < 0.1
-        ):
-            info["discrete_penalty"] = self.penalty
+        a = np.atleast_1d(action[-1])
+        last = np.atleast_1d(self.last_gripper_pos)
+        for ai, lasti in zip(a, last):
+            if (ai < -0.5 and lasti > 0.9) or (ai > 0.5 and lasti < 0.1):
+                info["discrete_penalty"] = self.penalty
+                break  # 只要有一个手指突变就惩罚
 
         self.last_gripper_pos = self.unwrapped.get_gripper_pose() / MAX_GRIPPER_COMMAND
         return observation, reward, terminated, truncated, info

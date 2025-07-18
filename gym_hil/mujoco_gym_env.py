@@ -162,7 +162,7 @@ class FrankaGymEnv(MujocoGymEnv):
         self._panda_dof_ids = np.asarray([self._model.joint(f"joint{i}").id for i in range(1, 8)])
         self._panda_ctrl_ids = np.asarray([self._model.actuator(f"actuator{i}").id for i in range(1, 8)])
 
-        ctrl_joint_names = ["THJ4", "THJ3", "THJ2", "THJ1",
+        ctrl_joint_names = ["THJ4", "THJ2", "THJ1",
                             "FFJ3", "FFJ2", "FFJ1",
                             "MFJ3", "MFJ2", "MFJ1",
                             "RFJ3", "RFJ2", "RFJ1",
