@@ -162,7 +162,7 @@ class FrankaGymEnv(MujocoGymEnv):
         self._panda_dof_ids = np.asarray([self._model.joint(f"joint{i}").id for i in range(1, 8)])
         self._panda_ctrl_ids = np.asarray([self._model.actuator(f"actuator{i}").id for i in range(1, 8)])
 
-        ctrl_joint_names = ["THJ2", "THJ1",
+        ctrl_joint_names = ["THJ4", "THJ2", "THJ1",
                             "FFJ3", "FFJ2", "FFJ1",
                             "MFJ3", "MFJ2", "MFJ1",
                             "RFJ3", "RFJ2", "RFJ1",
@@ -230,9 +230,9 @@ class FrankaGymEnv(MujocoGymEnv):
         """Reset the robot to home position."""
         self._data.qpos[self._panda_dof_ids] = self._home_position
         # 设置 THJ4 的初始角度为 90 度
-        thj4_id = self._model.joint("THJ4").id
-        self._data.qpos[thj4_id] = 1.57
-        self._data.ctrl[thj4_id] = 255
+        # thj4_id = self._model.joint("THJ4").id
+        # self._data.qpos[thj4_id] = 1.57
+        # self._data.ctrl[thj4_id] = 255
 
         self._data.ctrl[self._panda_ctrl_ids] = 0.0
         mujoco.mj_forward(self._model, self._data)

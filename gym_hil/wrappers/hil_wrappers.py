@@ -192,7 +192,7 @@ class InputsControlWrapper(gym.Wrapper):
         if self.use_gripper:
             gripper_command = self.controller.gripper_command()
             if gripper_command == "close":
-                gamepad_action = np.concatenate([gamepad_action, [1.4]])
+                gamepad_action = np.concatenate([gamepad_action, [2]])
             elif gripper_command == "open":
                 gamepad_action = np.concatenate([gamepad_action, [0.0]])
             else:

@@ -22,9 +22,10 @@ from gymnasium import spaces
 
 from gym_hil.mujoco_gym_env import FrankaGymEnv, GymRenderingSpec
 
-_PANDA_HOME = np.asarray((0, -0.785, 0, -2.35, 1.57, 3.14, -0.785))
-_CARTESIAN_BOUNDS = np.asarray([[0.6, -0.4, 0.08], [1, 0, 0.6]])
-_SAMPLING_BOUNDS = np.asarray([[0.6, -0.4], [1, 0]])
+_PANDA_HOME = np.asarray((0, -1.57, 0, -2.57, 0, 2.36, -2.36))
+
+_CARTESIAN_BOUNDS = np.asarray([[0.43, -0.3, 0.55], [0.8, 0.3, 0.7]])
+_SAMPLING_BOUNDS = np.asarray([[0.5, -0.3], [0.8, 0.3]])
 
 
 class PandaPickCubeGymEnv(FrankaGymEnv):
@@ -55,7 +56,8 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         )
 
         # Task-specific setup
-        self._block_z = self._model.geom("block").size[2]
+        # self._block_z = self._model.geom("block").size[2]
+        self._block_z = 0.52
         self._random_block_position = random_block_position
 
         # Setup observation space properly to match what _compute_observation returns
@@ -139,10 +141,10 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
 
         # Check if block is outside bounds
         block_pos = self._data.sensor("block_pos").data
-        exceeded_bounds = np.any(block_pos[:2] < (_SAMPLING_BOUNDS[0] - 0.05)) or np.any(
-            block_pos[:2] > (_SAMPLING_BOUNDS[1] + 0.05)
-        )
-
+        # exceeded_bounds = np.any(block_pos[:2] < (_SAMPLING_BOUNDS[0] - 0.1)) or np.any(
+        #     block_pos[:2] > (_SAMPLING_BOUNDS[1] + 0.1)
+        # )
+        exceeded_bounds = block_pos[2] < 0.4
         terminated = bool(success or exceeded_bounds)
         return obs, rew, terminated, False, {"succeed": success}
 

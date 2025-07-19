@@ -89,18 +89,18 @@ def main():
             # Step the environment
             obs, reward, terminated, truncated, info = env.step(dummy_action)
             
-            # 获取相机图像
-            front_img = obs['pixels']['front']
-            wrist_img = obs['pixels']['wrist']
+            # # 获取相机图像
+            # front_img = obs['pixels']['front']
+            # wrist_img = obs['pixels']['wrist']
             
-            # 显示图像
-            cv2.imshow('Front Camera', front_img)
-            cv2.imshow('Wrist Camera', wrist_img)
+            # # 显示图像
+            # cv2.imshow('Front Camera', front_img)
+            # cv2.imshow('Wrist Camera', wrist_img)
             
-            # 等待按键，按 'q' 退出
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
-                break
+            # # 等待按键，按 'q' 退出
+            # key = cv2.waitKey(1) & 0xFF
+            # if key == ord('q'):
+            #     break
             
             # 打印一些反馈
             if info.get("succeed", False):
