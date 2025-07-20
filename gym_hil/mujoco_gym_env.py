@@ -55,7 +55,7 @@ import time
 from gym_hil.controllers import opspace
 
 MAX_GRIPPER_COMMAND = 1.57
-
+TIP_JOINT_NAME = ["FFJ1", "MFJ1", "RFJ1", "LFJ1"]
 
 @dataclass(frozen=True)
 class GymRenderingSpec:
@@ -268,6 +268,7 @@ class FrankaGymEnv(MujocoGymEnv):
         # thj4_id = self._model.joint("THJ4").id
         # self._data.qpos[thj4_id] = 1.57
         # self._data.ctrl[thj4_id] = 255
+
 
         self._data.ctrl[self._panda_ctrl_ids] = 0.0
         mujoco.mj_forward(self._model, self._data)
