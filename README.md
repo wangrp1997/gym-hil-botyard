@@ -36,14 +36,12 @@ After only 10 minutes of training, the policy successfully performs the task.
 
 ```bash
 git clone https://github.com/wangrp1997/gym-hil-botyard.git && cd gym-hil-botyard
-
 pip install -e .
 ```
 
 ## Franka Environment Quick Start
 
 ```bash
-python
 import time
 import imageio
 import gymnasium as gym
