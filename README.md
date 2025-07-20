@@ -32,32 +32,9 @@ The policy was trained for **10 minutes** with human in the loop.
 After only 10 minutes of training, the policy successfully performs the task.
 
 
-## 创建ur16e的xml文件(需要下载ur官方的机器人描述包)
-
-```bash
-ros2 run xacro xacro ur.urdf.xacro ur_type:=ur16e name:=ur16e -o ur16e.urdf
-sed -i 's|package://ur_description|ur16e|g' ur16e.urdf
-```
-
-## 实时渲染相机视角
-
-[refs](https://blog.csdn.net/weixin_38428827/article/details/147622260)
-
-
 ## Installation
 
-Create a virtual environment with Python 3.10 and activate it, e.g. with [`miniconda`](https://docs.anaconda.com/free/miniconda/index.html):
-```bash
-conda create -y -n gym_hil python=3.10 && conda activate gym_hil
-```
-
-Install gym-hil from PyPI:
-```bash
-pip install gym-hil
-```
-or from source:
-```bash
-git clone https://github.com/HuggingFace/gym-hil.git && cd gym-hil
+git clone https://github.com/wangrp1997/gym-hil-botyard.git && cd gym-hil-botyard
 pip install -e .
 ```
 
