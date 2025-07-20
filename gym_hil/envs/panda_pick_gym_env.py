@@ -22,9 +22,10 @@ from gymnasium import spaces
 
 from gym_hil.mujoco_gym_env import FrankaGymEnv, GymRenderingSpec
 
-_PANDA_HOME = np.asarray((0, 0.195, 0, -2.43, 0, 2.62, 0.785))
-_CARTESIAN_BOUNDS = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]])
-_SAMPLING_BOUNDS = np.asarray([[0.3, -0.15], [0.5, 0.15]])
+_PANDA_HOME = np.asarray((0, -1.57, 0, -2.57, 0, 2.36, -2.36))
+
+_CARTESIAN_BOUNDS = np.asarray([[0.43, -0.3, 0.55], [0.8, 0.3, 0.7]])
+_SAMPLING_BOUNDS = np.asarray([[0.5, -0.3], [0.8, 0.3]])
 
 
 class PandaPickCubeGymEnv(FrankaGymEnv):
@@ -37,9 +38,9 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         physics_dt: float = 0.002,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
         render_mode: Literal["rgb_array", "human"] = "rgb_array",
-        image_obs: bool = False,
+        image_obs: bool = True,
         reward_type: str = "sparse",
-        random_block_position: bool = False,
+        random_block_position: bool = True,
     ):
         self.reward_type = reward_type
 
@@ -55,7 +56,8 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         )
 
         # Task-specific setup
-        self._block_z = self._model.geom("block").size[2]
+        # self._block_z = self._model.geom("block").size[2]
+        self._block_z = 0.52
         self._random_block_position = random_block_position
 
         # Setup observation space properly to match what _compute_observation returns
@@ -139,12 +141,11 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
 
         # Check if block is outside bounds
         block_pos = self._data.sensor("block_pos").data
-        exceeded_bounds = np.any(block_pos[:2] < (_SAMPLING_BOUNDS[0] - 0.05)) or np.any(
-            block_pos[:2] > (_SAMPLING_BOUNDS[1] + 0.05)
-        )
-
+        # exceeded_bounds = np.any(block_pos[:2] < (_SAMPLING_BOUNDS[0] - 0.1)) or np.any(
+        #     block_pos[:2] > (_SAMPLING_BOUNDS[1] + 0.1)
+        # )
+        exceeded_bounds = block_pos[2] < 0.4
         terminated = bool(success or exceeded_bounds)
-
         return obs, rew, terminated, False, {"succeed": success}
 
     def _compute_observation(self) -> dict:
@@ -161,6 +162,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         if self.image_obs:
             # Image observations
             front_view, wrist_view = self.render()
+
             observation = {
                 "pixels": {"front": front_view, "wrist": wrist_view},
                 "agent_pos": robot_state,
@@ -192,7 +194,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
     def _is_success(self) -> bool:
         """Check if the task is successfully completed."""
         block_pos = self._data.sensor("block_pos").data
-        tcp_pos = self._data.sensor("2f85/pinch_pos").data
+        tcp_pos = self._data.sensor("botyard/pinch_pos").data
         dist = np.linalg.norm(block_pos - tcp_pos)
         lift = block_pos[2] - self._z_init
         return dist < 0.05 and lift > 0.1

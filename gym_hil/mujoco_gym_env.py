@@ -14,6 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Franka Panda 机器人环境，支持可调节的夹爪速度控制和自动开关功能.
+
+使用示例：
+    # 创建环境时设置夹爪速度限制
+    env = FrankaGymEnv(
+        gripper_speed_limit=0.05,    # 较慢的夹爪速度
+        control_dt=0.02,             # 控制时间步长
+    )
+    
+    # 或者使用默认设置（中等速度）
+    env = FrankaGymEnv()  # 默认 gripper_speed_limit=0.5
+    
+    # 更快的夹爪速度
+    env = FrankaGymEnv(gripper_speed_limit=1.0)
+    
+夹爪控制参数说明：
+- gripper_speed_limit: 夹爪位置变化的最大速度（单位：位置/秒）
+- 值越小，夹爪运动越慢
+- 建议范围：0.05-1.0
+
+自动开关功能：
+- grasp_command > 0: 夹爪自动缓慢闭合到最大位置
+- grasp_command < 0: 夹爪自动缓慢打开到最小位置
+- grasp_command = 0: 停止当前动作，进入手动控制模式
+- 只需要按一次，夹爪就会自动完成整个开关过程
+- 通过gripper_speed_limit参数调节开关速度
+"""
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
@@ -22,11 +51,11 @@ import gymnasium as gym
 import mujoco
 import numpy as np
 from gymnasium import spaces
-
+import time
 from gym_hil.controllers import opspace
 
-MAX_GRIPPER_COMMAND = 255
-
+MAX_GRIPPER_COMMAND = 1.57
+TIP_JOINT_NAME = ["FFJ1", "MFJ1", "RFJ1", "LFJ1"]
 
 @dataclass(frozen=True)
 class GymRenderingSpec:
@@ -124,13 +153,14 @@ class FrankaGymEnv(MujocoGymEnv):
         control_dt: float = 0.02,
         physics_dt: float = 0.002,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
-        render_mode: Literal["rgb_array", "human"] = "rgb_array",
-        image_obs: bool = False,
+        render_mode: Literal["rgb_array", "human"] = "human",
+        image_obs: bool = True,
         home_position: np.ndarray = np.asarray((0, -0.785, 0, -2.35, 0, 1.57, np.pi / 4)),  # noqa: B008
         cartesian_bounds: np.ndarray = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]]),  # noqa: B008
+        gripper_speed_limit: float = 0.5,  # 夹爪速度限制，值越小闭合越慢
     ):
         if xml_path is None:
-            xml_path = Path(__file__).parent.parent / "gym_hil" / "assets" / "scene.xml"
+            xml_path = Path(__file__).parent.parent / "gym_hil" / "assets" / "scene_by.xml"
 
         super().__init__(
             xml_path=xml_path,
@@ -142,6 +172,11 @@ class FrankaGymEnv(MujocoGymEnv):
 
         self._home_position = home_position
         self._cartesian_bounds = cartesian_bounds
+        self._gripper_speed_limit = gripper_speed_limit  # 夹爪速度限制
+        self._auto_closing = False  # 是否正在自动闭合
+        self._auto_opening = False  # 是否正在自动打开
+        self._auto_close_target = 1.0  # 自动闭合目标位置
+        self._auto_open_target = 0.0  # 自动打开目标位置
 
         self.metadata = {
             "render_modes": ["human", "rgb_array"],
@@ -161,7 +196,16 @@ class FrankaGymEnv(MujocoGymEnv):
         # Cache robot IDs
         self._panda_dof_ids = np.asarray([self._model.joint(f"joint{i}").id for i in range(1, 8)])
         self._panda_ctrl_ids = np.asarray([self._model.actuator(f"actuator{i}").id for i in range(1, 8)])
-        self._gripper_ctrl_id = self._model.actuator("fingers_actuator").id
+
+        ctrl_joint_names = ["THJ4", "THJ2", "THJ1",
+                            "FFJ3", "FFJ2", "FFJ1",
+                            "MFJ3", "MFJ2", "MFJ1",
+                            "RFJ3", "RFJ2", "RFJ1",
+                            "LFJ4", "LFJ3", "LFJ2", "LFJ1"]
+
+        self._gripper_ctrl_ids = [
+            self._model.actuator(name).id for name in ctrl_joint_names
+        ]
         self._pinch_site_id = self._model.site("pinch").id
 
         # Setup observation and action spaces
@@ -220,12 +264,24 @@ class FrankaGymEnv(MujocoGymEnv):
     def reset_robot(self):
         """Reset the robot to home position."""
         self._data.qpos[self._panda_dof_ids] = self._home_position
+        # 设置 THJ4 的初始角度为 90 度
+        # thj4_id = self._model.joint("THJ4").id
+        # self._data.qpos[thj4_id] = 1.57
+        # self._data.ctrl[thj4_id] = 255
+
+
         self._data.ctrl[self._panda_ctrl_ids] = 0.0
         mujoco.mj_forward(self._model, self._data)
-
         # Reset mocap body to home position
-        tcp_pos = self._data.sensor("2f85/pinch_pos").data
+        tcp_pos = self._data.sensor("botyard/pinch_pos").data
         self._data.mocap_pos[0] = tcp_pos
+        self._data.mocap_quat[0] = self._data.sensor("botyard/pinch_quat").data
+        
+        # 重置自动闭合状态
+        self._auto_closing = False
+        self._auto_close_target = 1.0
+        self._auto_opening = False
+        self._auto_open_target = 0.0
 
     def apply_action(self, action):
         """Apply the action to the robot."""
@@ -237,10 +293,60 @@ class FrankaGymEnv(MujocoGymEnv):
         npos = np.clip(pos + dpos, *self._cartesian_bounds)
         self._data.mocap_pos[0] = npos
 
-        # Set gripper grasp
-        g = self._data.ctrl[self._gripper_ctrl_id] / MAX_GRIPPER_COMMAND
-        ng = np.clip(g + grasp_command, 0.0, 1.0)
-        self._data.ctrl[self._gripper_ctrl_id] = ng * MAX_GRIPPER_COMMAND
+        # 夹爪自动控制逻辑
+        current_gripper = self._data.ctrl[self._gripper_ctrl_ids] / MAX_GRIPPER_COMMAND
+        
+        # 检查是否触发自动闭合（正数）
+        if grasp_command > 0 and not self._auto_closing and not self._auto_opening:
+            # 开始自动闭合
+            self._auto_closing = True
+            self._auto_opening = False
+            self._auto_close_target = 1.0  # 闭合到最大位置
+        
+        # 检查是否触发自动打开（负数）
+        elif grasp_command < 0 and not self._auto_opening and not self._auto_closing:
+            # 开始自动打开
+            self._auto_opening = True
+            self._auto_closing = False
+            self._auto_open_target = 0.0  # 打开到最小位置
+        
+        # 如果正在自动闭合，继续闭合过程
+        if self._auto_closing:
+            # 计算到目标位置的距离
+            distance_to_target = self._auto_close_target - current_gripper[0]  # 使用第一个关节作为参考
+            
+            if abs(distance_to_target) < 0.01:  # 接近目标位置
+                # 完成自动闭合
+                self._auto_closing = False
+                target_gripper = np.full_like(current_gripper, self._auto_close_target)
+            else:
+                # 继续缓慢闭合
+                target_gripper = np.full_like(current_gripper, self._auto_close_target)
+        
+        # 如果正在自动打开，继续打开过程
+        elif self._auto_opening:
+            # 计算到目标位置的距离
+            distance_to_target = self._auto_open_target - current_gripper[0]  # 使用第一个关节作为参考
+            
+            if abs(distance_to_target) < 0.01:  # 接近目标位置
+                # 完成自动打开
+                self._auto_opening = False
+                target_gripper = np.full_like(current_gripper, self._auto_open_target)
+            else:
+                # 继续缓慢打开
+                target_gripper = np.full_like(current_gripper, self._auto_open_target)
+        
+        else:
+            # 正常的手动控制
+            target_gripper = np.clip(current_gripper + grasp_command, 0.0, 1.0)
+        
+        # 限制夹爪速度，让运动更平滑
+        gripper_diff = target_gripper - current_gripper
+        max_change = self._gripper_speed_limit * self._control_dt  # 基于控制时间步长的速度限制
+        limited_diff = np.clip(gripper_diff, -max_change, max_change)
+        new_gripper = current_gripper + limited_diff
+        
+        self._data.ctrl[self._gripper_ctrl_ids] = new_gripper * MAX_GRIPPER_COMMAND
 
         # Apply operational space control
         for _ in range(self._n_substeps):
@@ -259,7 +365,7 @@ class FrankaGymEnv(MujocoGymEnv):
 
     def get_robot_state(self):
         """Get the current state of the robot."""
-        tcp_pos = self._data.sensor("2f85/pinch_pos").data
+        tcp_pos = self._data.sensor("botyard/pinch_pos").data
         # tcp_quat = self._data.sensor("2f85/pinch_quat").data
         # tcp_vel = self._data.sensor("2f85/pinch_vel").data
         # tcp_angvel = self._data.sensor("2f85/pinch_angvel").data
@@ -272,11 +378,15 @@ class FrankaGymEnv(MujocoGymEnv):
     def render(self):
         """Render the environment and return frames from multiple cameras."""
         rendered_frames = []
+
         for cam_id in self.camera_id:
             self._viewer.update_scene(self.data, camera=cam_id)
+            a = self._viewer.render()
             rendered_frames.append(self._viewer.render())
+
         return rendered_frames
+
 
     def get_gripper_pose(self):
         """Get the current pose of the gripper."""
-        return np.array([self._data.ctrl[self._gripper_ctrl_id]], dtype=np.float32)
+        return np.array([self._data.ctrl[ctrl_id] for ctrl_id in self._gripper_ctrl_ids], dtype=np.float32)

@@ -31,20 +31,10 @@ We use [HIL-SERL](https://hil-serl.github.io/) from [LeRobot](https://github.com
 The policy was trained for **10 minutes** with human in the loop.
 After only 10 minutes of training, the policy successfully performs the task.
 
+
 ## Installation
 
-Create a virtual environment with Python 3.10 and activate it, e.g. with [`miniconda`](https://docs.anaconda.com/free/miniconda/index.html):
-```bash
-conda create -y -n gym_hil python=3.10 && conda activate gym_hil
-```
-
-Install gym-hil from PyPI:
-```bash
-pip install gym-hil
-```
-or from source:
-```bash
-git clone https://github.com/HuggingFace/gym-hil.git && cd gym-hil
+git clone https://github.com/wangrp1997/gym-hil-botyard.git && cd gym-hil-botyard
 pip install -e .
 ```
 

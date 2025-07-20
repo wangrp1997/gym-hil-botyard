@@ -39,12 +39,13 @@ class GripperPenaltyWrapper(gym.Wrapper):
 
     def step(self, action):
         observation, reward, terminated, truncated, info = self.env.step(action)
-
         info["discrete_penalty"] = 0.0
-        if (action[-1] < -0.5 and self.last_gripper_pos > 0.9) or (
-            action[-1] > 0.5 and self.last_gripper_pos < 0.1
-        ):
-            info["discrete_penalty"] = self.penalty
+        a = np.atleast_1d(action[-1])
+        last = np.atleast_1d(self.last_gripper_pos)
+        for ai, lasti in zip(a, last):
+            if (ai < -0.5 and lasti > 0.9) or (ai > 0.5 and lasti < 0.1):
+                info["discrete_penalty"] = self.penalty
+                break  # 只要有一个手指突变就惩罚
 
         self.last_gripper_pos = self.unwrapped.get_gripper_pose() / MAX_GRIPPER_COMMAND
         return observation, reward, terminated, truncated, info
@@ -98,7 +99,6 @@ class EEActionWrapper(gym.ActionWrapper):
         if self.use_gripper:
             # NOTE: Normalize gripper action from [0, 2] -> [-1, 1]
             gripper_open_command = [action[-1] - 1.0]
-
         action = np.concatenate([action_xyz, actions_orn, gripper_open_command])
         return action
 
@@ -191,9 +191,9 @@ class InputsControlWrapper(gym.Wrapper):
 
         if self.use_gripper:
             gripper_command = self.controller.gripper_command()
-            if gripper_command == "open":
-                gamepad_action = np.concatenate([gamepad_action, [2.0]])
-            elif gripper_command == "close":
+            if gripper_command == "close":
+                gamepad_action = np.concatenate([gamepad_action, [2]])
+            elif gripper_command == "open":
                 gamepad_action = np.concatenate([gamepad_action, [0.0]])
             else:
                 gamepad_action = np.concatenate([gamepad_action, [1.0]])
