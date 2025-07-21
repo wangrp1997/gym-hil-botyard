@@ -389,4 +389,4 @@ class FrankaGymEnv(MujocoGymEnv):
 
     def get_gripper_pose(self):
         """Get the current pose of the gripper."""
-        return np.array([self._data.ctrl[ctrl_id] for ctrl_id in self._gripper_ctrl_ids], dtype=np.float32)
+        return np.array([self._data.ctrl[self._gripper_ctrl_ids[3]]], dtype=np.float32)

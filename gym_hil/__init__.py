@@ -81,7 +81,7 @@ register(
 register(
     id="gym_hil/PandaPickCubeKeyboard-v0",
     entry_point="gym_hil.wrappers.factory:make_env",
-    max_episode_steps=100,
+    max_episode_steps=200,
     kwargs={
         "env_id": "gym_hil/PandaPickCubeBase-v0",  # Use the base environment
         "use_viewer": True,
