@@ -39,7 +39,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
         render_mode: Literal["rgb_array", "human"] = "rgb_array",
         image_obs: bool = True,
-        reward_type: str = "sparse",
+        reward_type: str = "dense",
         random_block_position: bool = True,
     ):
         self.reward_type = reward_type
@@ -130,7 +130,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         """Take a step in the environment."""
         # Apply the action to the robot
         self.apply_action(action)
-
         # Compute observation, reward and termination
         obs = self._compute_observation()
         rew = self._compute_reward()
@@ -181,7 +180,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         block_pos = self._data.sensor("block_pos").data
 
         if self.reward_type == "dense":
-            tcp_pos = self._data.sensor("2f85/pinch_pos").data
+            tcp_pos = self._data.sensor("botyard/pinch_pos").data
             dist = np.linalg.norm(block_pos - tcp_pos)
             r_close = np.exp(-20 * dist)
             r_lift = (block_pos[2] - self._z_init) / (self._z_success - self._z_init)
