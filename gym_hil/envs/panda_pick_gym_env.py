@@ -147,6 +147,10 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         # )
         exceeded_bounds = block_pos[2] < 0.4
         terminated = bool(success or exceeded_bounds)
+
+        print(
+    f"[DEBUG] obs: {type(obs)}, rew: {type(rew)}, terminated: {type(terminated)}, "
+    f"truncated: {type(False)}, info: {type({'succeed': success})}, info['succeed']: {type(success)}")
         return obs, rew, terminated, False, {"succeed": success}
 
     def _compute_observation(self) -> dict:
@@ -187,7 +191,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
             r_close = np.exp(-20 * dist)
             r_lift = (block_pos[2] - self._z_init) / (self._z_success - self._z_init)
             r_lift = np.clip(r_lift, 0.0, 1.0)
-            return 0.3 * r_close + 0.7 * r_lift
+            return float(0.3 * r_close + 0.7 * r_lift)
         else:
             lift = block_pos[2] - self._z_init
             return float(lift > 0.1)
@@ -198,7 +202,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         tcp_pos = self._data.sensor("botyard/pinch_pos").data
         dist = np.linalg.norm(block_pos - tcp_pos)
         lift = block_pos[2] - self._z_init
-        return dist < 0.07 and lift > 0.1
+        return lift >= 0.1
 
 
 if __name__ == "__main__":
