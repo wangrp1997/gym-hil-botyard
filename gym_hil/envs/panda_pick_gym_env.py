@@ -137,6 +137,8 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
 
         if self.reward_type == "sparse":
             success = rew == 1.0
+        else:
+            success = bool(success)
 
         # Check if block is outside bounds
         block_pos = self._data.sensor("block_pos").data
@@ -196,7 +198,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         tcp_pos = self._data.sensor("botyard/pinch_pos").data
         dist = np.linalg.norm(block_pos - tcp_pos)
         lift = block_pos[2] - self._z_init
-        return dist < 0.05 and lift > 0.1
+        return dist < 0.07 and lift > 0.1
 
 
 if __name__ == "__main__":
