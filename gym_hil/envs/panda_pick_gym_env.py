@@ -148,9 +148,9 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         exceeded_bounds = block_pos[2] < 0.4
         terminated = bool(success or exceeded_bounds)
 
-        print(
-    f"[DEBUG] obs: {type(obs)}, rew: {type(rew)}, terminated: {type(terminated)}, "
-    f"truncated: {type(False)}, info: {type({'succeed': success})}, info['succeed']: {type(success)}")
+    #     print(
+    # f"[DEBUG] obs: {type(obs)}, rew: {type(rew)}, terminated: {type(terminated)}, "
+    # f"truncated: {type(False)}, info: {type({'succeed': success})}, info['succeed']: {type(success)}")
         return obs, rew, terminated, False, {"succeed": success}
 
     def _compute_observation(self) -> dict:

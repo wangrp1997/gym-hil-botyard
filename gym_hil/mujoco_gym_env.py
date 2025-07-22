@@ -157,7 +157,7 @@ class FrankaGymEnv(MujocoGymEnv):
         image_obs: bool = True,
         home_position: np.ndarray = np.asarray((0, -0.785, 0, -2.35, 0, 1.57, np.pi / 4)),  # noqa: B008
         cartesian_bounds: np.ndarray = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]]),  # noqa: B008
-        gripper_speed_limit: float = 0.5,  # 夹爪速度限制，值越小闭合越慢
+        gripper_speed_limit: float = 1,  # 夹爪速度限制，值越小闭合越慢
     ):
         if xml_path is None:
             xml_path = Path(__file__).parent.parent / "gym_hil" / "assets" / "scene_by.xml"
@@ -173,10 +173,7 @@ class FrankaGymEnv(MujocoGymEnv):
         self._home_position = home_position
         self._cartesian_bounds = cartesian_bounds
         self._gripper_speed_limit = gripper_speed_limit  # 夹爪速度限制
-        self._auto_closing = False  # 是否正在自动闭合
-        self._auto_opening = False  # 是否正在自动打开
-        self._auto_close_target = 1.0  # 自动闭合目标位置
-        self._auto_open_target = 0.0  # 自动打开目标位置
+
 
         self.metadata = {
             "render_modes": ["human", "rgb_array"],
@@ -277,15 +274,11 @@ class FrankaGymEnv(MujocoGymEnv):
         self._data.mocap_pos[0] = tcp_pos
         self._data.mocap_quat[0] = self._data.sensor("botyard/pinch_quat").data
         
-        # 重置自动闭合状态
-        self._auto_closing = False
-        self._auto_close_target = 1.0
-        self._auto_opening = False
-        self._auto_open_target = 0.0
 
     def apply_action(self, action):
         """Apply the action to the robot."""
         x, y, z, rx, ry, rz, grasp_command = action
+        # print(f"[DEBUG] grasp_command: {grasp_command}, type: {type(grasp_command)}")
 
         # Set the mocap position
         pos = self._data.mocap_pos[0].copy()
@@ -295,50 +288,8 @@ class FrankaGymEnv(MujocoGymEnv):
 
         # 夹爪自动控制逻辑
         current_gripper = self._data.ctrl[self._gripper_ctrl_ids] / MAX_GRIPPER_COMMAND
-        
-        # 检查是否触发自动闭合（正数）
-        if grasp_command > 0 and not self._auto_closing and not self._auto_opening:
-            # 开始自动闭合
-            self._auto_closing = True
-            self._auto_opening = False
-            self._auto_close_target = 1.0  # 闭合到最大位置
-        
-        # 检查是否触发自动打开（负数）
-        elif grasp_command < 0 and not self._auto_opening and not self._auto_closing:
-            # 开始自动打开
-            self._auto_opening = True
-            self._auto_closing = False
-            self._auto_open_target = 0.0  # 打开到最小位置
-        
-        # 如果正在自动闭合，继续闭合过程
-        if self._auto_closing:
-            # 计算到目标位置的距离
-            distance_to_target = self._auto_close_target - current_gripper[0]  # 使用第一个关节作为参考
-            
-            if abs(distance_to_target) < 0.01:  # 接近目标位置
-                # 完成自动闭合
-                self._auto_closing = False
-                target_gripper = np.full_like(current_gripper, self._auto_close_target)
-            else:
-                # 继续缓慢闭合
-                target_gripper = np.full_like(current_gripper, self._auto_close_target)
-        
-        # 如果正在自动打开，继续打开过程
-        elif self._auto_opening:
-            # 计算到目标位置的距离
-            distance_to_target = self._auto_open_target - current_gripper[0]  # 使用第一个关节作为参考
-            
-            if abs(distance_to_target) < 0.01:  # 接近目标位置
-                # 完成自动打开
-                self._auto_opening = False
-                target_gripper = np.full_like(current_gripper, self._auto_open_target)
-            else:
-                # 继续缓慢打开
-                target_gripper = np.full_like(current_gripper, self._auto_open_target)
-        
-        else:
-            # 正常的手动控制
-            target_gripper = np.clip(current_gripper + grasp_command, 0.0, 1.0)
+        # 正常的手动控制
+        target_gripper = np.clip(current_gripper + grasp_command, 0.0, 1.0)
         
         # 限制夹爪速度，让运动更平滑
         gripper_diff = target_gripper - current_gripper
