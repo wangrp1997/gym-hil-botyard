@@ -59,7 +59,8 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         # self._block_z = self._model.geom("block").size[2]
         self._block_z = 0.52
         self._random_block_position = random_block_position
-
+        self._prev_dist = None
+        self._prev_block_z = None
         # Setup observation space properly to match what _compute_observation returns
         # Observation space design:
         #   - "state":  agent (robot) configuration as a single Box
@@ -148,6 +149,9 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         exceeded_bounds = block_pos[2] < 0.4
         terminated = bool(success or exceeded_bounds)
 
+        # 失败惩罚：episode 结束但没成功
+        if terminated and not success:
+            rew -= 1.0  # 惩罚幅度可调
     #     print(
     # f"[DEBUG] obs: {type(obs)}, rew: {type(rew)}, terminated: {type(terminated)}, "
     # f"truncated: {type(False)}, info: {type({'succeed': success})}, info['succeed']: {type(success)}")
@@ -188,10 +192,32 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         if self.reward_type == "dense":
             tcp_pos = self._data.sensor("botyard/pinch_pos").data
             dist = np.linalg.norm(block_pos - tcp_pos)
-            r_close = np.exp(-20 * dist)
-            r_lift = (block_pos[2] - self._z_init) / (self._z_success - self._z_init)
-            r_lift = np.clip(r_lift, 0.0, 1.0)
-            return float(0.3 * r_close + 0.7 * r_lift)
+            lift = block_pos[2] - self._z_init
+            max_lift = self._z_success - self._z_init
+
+            # 差分指数奖励
+            if self._prev_dist is None:
+                r_close = 0.0
+            else:
+                r_close = max(0.0, np.exp(-20 * dist) - np.exp(-20 * self._prev_dist))
+            if self._prev_block_z is None:
+                r_lift = 0.0
+            else:
+                r_lift = max(0.0, (block_pos[2] - self._prev_block_z) / max_lift)
+
+            time_penalty = -0.01
+            
+            success = lift >= 0.1
+            r_success = 1.0 if success else 0.0
+            block_out = block_pos[2] < 0.4
+            r_out = -1.0 if block_out else 0.0
+
+            reward = 0.3 * r_close + 0.7 * r_lift + 2.0 * r_success + 1.0 * r_out + time_penalty
+            
+            self._prev_dist = dist
+            self._prev_block_z = block_pos[2]
+
+            return float(reward)
         else:
             lift = block_pos[2] - self._z_init
             return float(lift > 0.1)

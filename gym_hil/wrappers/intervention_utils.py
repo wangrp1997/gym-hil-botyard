@@ -16,7 +16,7 @@
 
 import json
 from pathlib import Path
-
+import time
 
 def load_controller_config(controller_name: str, config_path: str | None = None) -> dict:
     """
@@ -136,6 +136,11 @@ class KeyboardController(InputController):
             "rerecord": False,
         }
         self.listener = None
+        # 新增：记录按下时间
+        self._space_down_time = None
+        self._enter_down_time = None
+        self._r_down_time = None
+        self._long_press_threshold = 1.0  # 长按1秒
 
     def start(self):
         """Start the keyboard listener."""
@@ -160,15 +165,17 @@ class KeyboardController(InputController):
                 elif key == keyboard.Key.ctrl_l:
                     self.close_gripper_command = True
                 elif key == keyboard.Key.enter:
-                    self.key_states["success"] = True
-                    self.episode_end_status = "success"
+                    if self._enter_down_time is None:
+                        self._enter_down_time = time.time()
                 elif key == keyboard.Key.esc:
                     self.key_states["failure"] = True
                     self.episode_end_status = "failure"
-                elif key == keyboard.Key.space:
-                    self.key_states["intervention"] = not self.key_states["intervention"]
+                if key == keyboard.Key.space:
+                    if self._space_down_time is None:
+                        self._space_down_time = time.time()
                 elif key == keyboard.Key.r:
-                    self.key_states["rerecord"] = True
+                    if self._r_down_time is None:
+                        self._r_down_time = time.time()
             except AttributeError:
                 pass
 
@@ -190,6 +197,25 @@ class KeyboardController(InputController):
                     self.open_gripper_command = False
                 elif key == keyboard.Key.ctrl_l:
                     self.close_gripper_command = False
+                elif key == keyboard.Key.space:
+                    if self._space_down_time is not None:
+                        duration = time.time() - self._space_down_time
+                        if duration >= self._long_press_threshold:
+                            self.key_states["intervention"] = not self.key_states["intervention"]
+                        self._space_down_time = None
+                elif key == keyboard.Key.enter:
+                    if self._enter_down_time is not None:
+                        duration = time.time() - self._enter_down_time
+                        if duration >= self._long_press_threshold:
+                            self.key_states["success"] = True
+                            self.episode_end_status = "success"
+                        self._enter_down_time = None
+                elif key == keyboard.Key.r:
+                    if self._r_down_time is not None:
+                        duration = time.time() - self._r_down_time
+                        if duration >= self._long_press_threshold:
+                            self.key_states["rerecord"] = True
+                        self._r_down_time = None                              
             except AttributeError:
                 pass
 
