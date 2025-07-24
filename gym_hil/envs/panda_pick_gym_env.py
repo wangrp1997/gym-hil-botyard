@@ -41,6 +41,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         image_obs: bool = True,
         reward_type: str = "dense",
         random_block_position: bool = True,
+        **kwargs,  # <--- 新增
     ):
         self.reward_type = reward_type
 
@@ -133,6 +134,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         self.apply_action(action)
         # Compute observation, reward and termination
         obs = self._compute_observation()
+
         rew = self._compute_reward()
         success = self._is_success()
 
@@ -182,7 +184,6 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
                 "agent_pos": robot_state,
                 "environment_state": block_pos,
             }
-
         return observation
 
     def _compute_reward(self) -> float:

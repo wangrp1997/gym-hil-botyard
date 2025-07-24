@@ -121,8 +121,8 @@ class InputController:
 class KeyboardController(InputController):
     """Generate motion deltas from keyboard input."""
 
-    def __init__(self, x_step_size=0.01, y_step_size=0.01, z_step_size=0.01):
-        super().__init__(x_step_size, y_step_size, z_step_size)
+    def __init__(self, mode, x_step_size=0.01, y_step_size=0.01, z_step_size=0.01, **kwargs):
+        super().__init__(x_step_size, y_step_size, z_step_size, **kwargs)
         self.key_states = {
             "forward_x": False,
             "backward_x": False,
@@ -141,6 +141,7 @@ class KeyboardController(InputController):
         self._enter_down_time = None
         self._r_down_time = None
         self._long_press_threshold = 1.0  # 长按1秒
+        self._record_mode = mode == "record"
 
     def start(self):
         """Start the keyboard listener."""
@@ -197,25 +198,26 @@ class KeyboardController(InputController):
                     self.open_gripper_command = False
                 elif key == keyboard.Key.ctrl_l:
                     self.close_gripper_command = False
-                elif key == keyboard.Key.space:
-                    if self._space_down_time is not None:
-                        duration = time.time() - self._space_down_time
-                        if duration >= self._long_press_threshold:
-                            self.key_states["intervention"] = not self.key_states["intervention"]
-                        self._space_down_time = None
-                elif key == keyboard.Key.enter:
-                    if self._enter_down_time is not None:
-                        duration = time.time() - self._enter_down_time
-                        if duration >= self._long_press_threshold:
-                            self.key_states["success"] = True
-                            self.episode_end_status = "success"
-                        self._enter_down_time = None
-                elif key == keyboard.Key.r:
-                    if self._r_down_time is not None:
-                        duration = time.time() - self._r_down_time
-                        if duration >= self._long_press_threshold:
-                            self.key_states["rerecord"] = True
-                        self._r_down_time = None                              
+                if self._space_down_time is not None:
+                    duration = time.time() - self._space_down_time
+                    if self._record_mode or duration >= self._long_press_threshold:
+                        self.key_states["intervention"] = not self.key_states["intervention"]
+                    self._space_down_time = None
+
+                # enter
+                if self._enter_down_time is not None:
+                    duration = time.time() - self._enter_down_time
+                    if self._record_mode or duration >= self._long_press_threshold:
+                        self.key_states["success"] = True
+                        self.episode_end_status = "success"
+                    self._enter_down_time = None
+
+                # r
+                if self._r_down_time is not None:
+                    duration = time.time() - self._r_down_time
+                    if self._record_mode or duration >= self._long_press_threshold:
+                        self.key_states["rerecord"] = True
+                    self._r_down_time = None                            
             except AttributeError:
                 pass
 

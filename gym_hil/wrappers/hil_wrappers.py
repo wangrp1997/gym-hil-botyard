@@ -122,6 +122,7 @@ class InputsControlWrapper(gym.Wrapper):
         input_threshold=0.001,
         use_gamepad=True,
         controller_config_path=None,
+        mode=None,  # 新增
     ):
         """
         Initialize the inputs controller wrapper.
@@ -136,6 +137,7 @@ class InputsControlWrapper(gym.Wrapper):
             input_threshold: Minimum movement delta to consider as active input
             use_gamepad: Whether to use gamepad or keyboard control
             controller_config_path: Path to the controller configuration JSON file
+            mode: record/replay/other, 传递给 KeyboardController
         """
         super().__init__(env)
         from gym_hil.wrappers.intervention_utils import (
@@ -161,6 +163,7 @@ class InputsControlWrapper(gym.Wrapper):
                 )
         else:
             self.controller = KeyboardController(
+                mode=mode,  # 关键：传递 mode
                 x_step_size=x_step_size,
                 y_step_size=y_step_size,
                 z_step_size=z_step_size,

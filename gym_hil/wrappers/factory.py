@@ -33,6 +33,7 @@ def wrap_env(
     gripper_penalty: float = -0.02,
     reset_delay_seconds: float = 1.0,
     controller_config_path: str = None,
+    mode=None,
 ) -> gym.Env:
     """Apply wrappers to an environment based on configuration.
 
@@ -69,6 +70,7 @@ def wrap_env(
         auto_reset=auto_reset,
         use_gamepad=use_gamepad,
         controller_config_path=controller_config_path,
+        mode=mode,
     )
 
     # Apply wrappers in the correct order
@@ -92,6 +94,7 @@ def make_env(
     gripper_penalty: float = -0.02,
     reset_delay_seconds: float = 1.0,
     controller_config_path: str | None = None,
+    mode=None,
     **kwargs,
 ) -> gym.Env:
     """Create and wrap an environment in a single function.
@@ -131,4 +134,5 @@ def make_env(
         gripper_penalty=gripper_penalty,
         reset_delay_seconds=reset_delay_seconds,
         controller_config_path=controller_config_path,
+        mode=mode,
     )
