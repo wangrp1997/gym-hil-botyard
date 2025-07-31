@@ -213,7 +213,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
             block_out = block_pos[2] < 0.4
             r_out = -1.0 if block_out else 0.0
 
-            reward = 0.3 * r_close + 0.7 * r_lift + 2.0 * r_success + 1.0 * r_out + time_penalty
+            reward = 0.3 * r_close + 1.0 * r_lift + 10.0 * r_success + 1.0 * r_out + time_penalty
             
             self._prev_dist = dist
             self._prev_block_z = block_pos[2]
