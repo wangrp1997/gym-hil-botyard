@@ -25,7 +25,7 @@ from gym_hil.mujoco_gym_env import FrankaGymEnv, GymRenderingSpec
 _PANDA_HOME = np.asarray((0, -1.57, 0, -2.57, 0, 2.36, -2.36))
 
 _CARTESIAN_BOUNDS = np.asarray([[0.43, -0.3, 0.55], [0.8, 0.3, 0.7]])
-_SAMPLING_BOUNDS = np.asarray([[0.5, -0.3], [0.8, 0.3]])
+_SAMPLING_BOUNDS = np.asarray([[0.6, -0.2], [0.7, 0.2]])
 
 
 class PandaPickCubeGymEnv(FrankaGymEnv):
@@ -185,6 +185,10 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
                 "environment_state": block_pos,
             }
         return observation
+
+    def get_observation(self) -> dict:
+        """公开方法，返回当前观测"""
+        return self._compute_observation()
 
     def _compute_reward(self) -> float:
         """Compute reward based on current state."""

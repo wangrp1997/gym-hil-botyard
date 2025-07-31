@@ -17,6 +17,7 @@
 import json
 from pathlib import Path
 import time
+import numpy as np
 
 def load_controller_config(controller_name: str, config_path: str | None = None) -> dict:
     """
@@ -574,3 +575,179 @@ class GamepadControllerHID(InputController):
     def should_save(self):
         """Return True if save button was pressed."""
         return self.save_requested
+
+
+class AutoPickController(InputController):
+    """自动抓取控制器，根据物体位置自动生成运动指令"""
+    
+    def __init__(self, env, x_step_size=0.01, y_step_size=0.01, z_step_size=0.01):
+        super().__init__(x_step_size, y_step_size, z_step_size)
+        self.env = env
+        self.target_pos = None
+        self.gripper_closing = False         # 是否正在闭合计数
+        self.gripper_closing_count = 0       # 夹爪闭合计数器
+        self.gripper_closing_wait = 10       # 闭合后等待帧数
+        self.ready_to_lift = False           # 是否可以提升
+        self.lifting_count = 0               # 新增：提升阶段计数
+        self.lifting_count_max = 5          # 新增：最大提升帧数
+        self.lift_start_z = None             # 新增：开始提升时的z坐标
+        
+    def start(self):
+        print("自动抓取控制器已启动")
+        
+    def stop(self):
+        print("自动抓取控制器已停止")
+        
+    def reset(self):
+        self.target_pos = None
+        self.open_gripper_command = False
+        self.close_gripper_command = False
+        self.gripper_closing = False
+        self.gripper_closing_count = 0
+        self.ready_to_lift = False
+        self.lifting_count = 10  # 新增
+        self.lift_start_z = None  # 新增
+        
+    def _get_current_tcp_pos(self):
+        try:
+            current_obs = self.env.get_observation()
+            if "agent_pos" in current_obs:
+                robot_state = current_obs["agent_pos"]
+                return robot_state[-3:]
+            else:
+                return [0.0, 0.0, 0.0]
+        except Exception as e:
+            print(f"获取TCP位置时出错: {e}")
+            return [0.0, 0.0, 0.0]
+        
+    def update(self):
+        self.target_pos = self.detect_object()
+        if self.ready_to_lift:
+            # 新增：提升阶段失败检测
+            try:
+                obs = self.env.get_observation()
+                if "environment_state" in obs:
+                    env_state = obs["environment_state"]
+                    if len(env_state) >= 3:
+                        current_z = env_state[2]
+                        # 记录开始提升时的z坐标
+                        if self.lift_start_z is None:
+                            self.lift_start_z = current_z
+                        
+                        # 检查是否成功提升（z坐标上升超过0.05米）
+                        if current_z > self.lift_start_z + 0.1:
+                            # 成功提升，重置计数
+                            self.lifting_count = 0
+                        else:
+                            # 没有成功提升，增加失败计数
+                            self.lifting_count += 1
+                            
+                        if self.lifting_count > self.lifting_count_max:
+                            print("提升失败，自动重置抓取状态")
+                            self.reset()
+                            return
+            except Exception as e:
+                print(f"提升阶段检测出错: {e}")
+            self.close_gripper_command = True
+            self.open_gripper_command = False
+            return
+        if self.target_pos is not None:
+            current_pos = self._get_current_tcp_pos()
+            self.target_pos[0] = self.target_pos[0] - 0.03
+            self.target_pos[1] = self.target_pos[1] + 0.03
+            distance = np.linalg.norm(np.array(self.target_pos) - np.array(current_pos))
+            if not self.gripper_closing:
+                if distance < 0.05:
+                    self.gripper_closing = True
+                    self.gripper_closing_count = 0
+                else:
+                    self.open_gripper_command = True
+                    self.close_gripper_command = False
+            else:
+                self.close_gripper_command = True
+                self.open_gripper_command = False
+                self.gripper_closing_count += 1
+                if self.gripper_closing_count >= self.gripper_closing_wait:
+                    self.ready_to_lift = True
+                    self.lifting_count = 0  # 新增：开始提升时计数归零
+                    self.lift_start_z = None  # 新增：重置开始提升时的z坐标
+        else:
+            self.open_gripper_command = True
+            self.close_gripper_command = False
+            self.gripper_closing = False
+            self.gripper_closing_count = 0
+            self.ready_to_lift = False
+            self.lifting_count = 0  # 新增
+            self.lift_start_z = None  # 新增
+        
+    def get_deltas(self):
+        """获取当前帧的运动增量"""
+        if self.target_pos is None:
+            return 0.0, 0.0, 0.0
+        try:
+            current_pos = self._get_current_tcp_pos()
+            if not self.ready_to_lift:
+                delta = np.array(self.target_pos) - np.array(current_pos)
+                delta_x = np.clip(delta[0], -self.x_step_size, self.x_step_size)
+                delta_y = np.clip(delta[1], -self.y_step_size, self.y_step_size)
+                delta_z = np.clip(delta[2], -self.z_step_size, self.z_step_size)
+                return delta_x, delta_y, delta_z
+            else:
+                # 夹爪闭合后，持续向上提升
+                return 0.0, 0.0, self.z_step_size
+        except Exception as e:
+            print(f"计算运动增量时出错: {e}")
+            return 0.0, 0.0, 0.0
+            
+    def detect_object(self):
+        """检测物体位置"""
+        try:
+            # 获取当前观测
+            obs = self.env.get_observation()
+            
+            # 方法1: 如果有environment_state，直接使用（这是物体的位置）
+            if "environment_state" in obs:
+                env_state = obs["environment_state"]
+                if len(env_state) >= 3:
+                    return env_state[:3]  # 返回物体位置
+                    
+            # 方法2: 如果没有environment_state，尝试从agent_pos推断
+            # 这里可以添加更复杂的物体检测逻辑
+            # 暂时返回一个固定的目标位置作为示例
+            return [0.5, 0.0, 0.1]  # 示例目标位置
+                
+        except Exception as e:
+            print(f"物体检测出错: {e}")
+            return None
+
+    def should_intervene(self):
+        """自动控制器始终返回True，表示一直处于干预状态"""
+        return True
+        
+    def get_episode_end_status(self):
+        """
+        Get the current episode end status from environment.
+
+        Returns:
+            None if episode should continue, "success" or "failure" otherwise
+        """
+        try:
+            # 直接调用环境的成功判断方法
+            if hasattr(self.env, '_is_success'):
+                if self.env._is_success():
+                    return "success"
+            
+            # 检查是否失败（物体掉落）
+            obs = self.env.get_observation()
+            if "environment_state" in obs:
+                env_state = obs["environment_state"]
+                if len(env_state) >= 3:
+                    # 如果物体z坐标低于0.4，认为失败
+                    if env_state[2] < 0.4:
+                        return "failure"
+            
+            return None
+            
+        except Exception as e:
+            print(f"获取episode状态时出错: {e}")
+            return None

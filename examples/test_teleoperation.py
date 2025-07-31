@@ -47,6 +47,7 @@ def main():
         "gym_hil/PandaPickCubeBase-v0",  # Use the base environment for debugging
         render_mode=args.render_mode,
         image_obs=True,
+        mode="record",
     )
 
     # Print observation space for debugging
@@ -68,6 +69,7 @@ def main():
         image_obs=True,
         use_gamepad=not args.use_keyboard,
         max_episode_steps=1000,  # 100 seconds * 10Hz
+        mode="record",
     )
 
     # Print observation space for the wrapped environment

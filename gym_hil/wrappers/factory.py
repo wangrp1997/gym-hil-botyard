@@ -48,6 +48,7 @@ def wrap_env(
         gripper_penalty: Penalty for using the gripper
         reset_delay_seconds: The number of seconds to delay during reset
         controller_config_path: Path to the controller configuration JSON file
+        mode: Control mode - "record", "replay", or "auto" for automatic picking
 
     Returns:
         The wrapped environment
@@ -110,6 +111,7 @@ def make_env(
         gripper_penalty: Penalty for using the gripper
         reset_delay_seconds: The number of seconds to delay during reset
         controller_config_path: Path to the controller configuration JSON file
+        mode: Control mode - "record", "replay", or "auto" for automatic picking
         **kwargs: Additional arguments to pass to the base environment
 
     Returns:

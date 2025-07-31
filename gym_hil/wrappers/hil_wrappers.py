@@ -23,7 +23,7 @@ import numpy as np
 
 from gym_hil.mujoco_gym_env import MAX_GRIPPER_COMMAND
 
-DEFAULT_EE_STEP_SIZE = {"x": 0.025, "y": 0.025, "z": 0.025}
+DEFAULT_EE_STEP_SIZE = {"x": 0.05, "y": 0.05, "z": 0.05}
 
 
 class GripperPenaltyWrapper(gym.Wrapper):
@@ -98,7 +98,7 @@ class EEActionWrapper(gym.ActionWrapper):
         gripper_open_command = [0.0]
         if self.use_gripper:
             # NOTE: Normalize gripper action from [0, 2] -> [-1, 1]
-            gripper_open_command = [action[-1] - 1.0]
+            gripper_open_command = [action[-1]]
         action = np.concatenate([action_xyz, actions_orn, gripper_open_command])
         return action
 
@@ -114,9 +114,9 @@ class InputsControlWrapper(gym.Wrapper):
     def __init__(
         self,
         env,
-        x_step_size=1.0,
-        y_step_size=1.0,
-        z_step_size=1.0,
+        x_step_size=0.01,
+        y_step_size=0.01,
+        z_step_size=0.01,
         use_gripper=False,
         auto_reset=False,
         input_threshold=0.001,
@@ -137,17 +137,28 @@ class InputsControlWrapper(gym.Wrapper):
             input_threshold: Minimum movement delta to consider as active input
             use_gamepad: Whether to use gamepad or keyboard control
             controller_config_path: Path to the controller configuration JSON file
-            mode: record/replay/other, 传递给 KeyboardController
+            mode: record/replay/auto, 传递给控制器
         """
         super().__init__(env)
         from gym_hil.wrappers.intervention_utils import (
             GamepadController,
             GamepadControllerHID,
             KeyboardController,
+            AutoPickController,  # 新增导入
         )
 
-        # use HidApi for macos
-        if use_gamepad:
+        # 根据mode选择控制器
+        if mode == "auto":
+            # 使用自动抓取控制器
+            self.controller = AutoPickController(
+                env=env,
+                x_step_size=x_step_size,
+                y_step_size=y_step_size,
+                z_step_size=z_step_size,
+            )
+            print("使用自动抓取控制器")
+        elif use_gamepad:
+            # 使用游戏手柄控制器
             if sys.platform == "darwin":
                 self.controller = GamepadControllerHID(
                     x_step_size=x_step_size,
@@ -162,6 +173,7 @@ class InputsControlWrapper(gym.Wrapper):
                     config_path=controller_config_path,
                 )
         else:
+            # 使用键盘控制器
             self.controller = KeyboardController(
                 mode=mode,  # 关键：传递 mode
                 x_step_size=x_step_size,
@@ -195,11 +207,11 @@ class InputsControlWrapper(gym.Wrapper):
         if self.use_gripper:
             gripper_command = self.controller.gripper_command()
             if gripper_command == "close":
-                gamepad_action = np.concatenate([gamepad_action, [2]])
-            elif gripper_command == "open":
-                gamepad_action = np.concatenate([gamepad_action, [0.0]])
-            else:
                 gamepad_action = np.concatenate([gamepad_action, [1.0]])
+            elif gripper_command == "open":
+                gamepad_action = np.concatenate([gamepad_action, [-1.0]])
+            else:
+                gamepad_action = np.concatenate([gamepad_action, [0.0]])
 
         # Check episode ending buttons
         # We'll rely on controller.get_episode_end_status() which returns "success", "failure", or None
@@ -241,6 +253,7 @@ class InputsControlWrapper(gym.Wrapper):
 
         if is_intervention:
             action = gamepad_action
+            print(f"gamepad_action: {gamepad_action}")
 
         # Step the environment
         obs, reward, terminated, truncated, info = self.env.step(action)
