@@ -610,7 +610,7 @@ class AutoPickController(InputController):
         
     def _get_current_tcp_pos(self):
         try:
-            current_obs = self.env.get_observation()
+            current_obs = self.env.unwrapped.get_observation()
             if "agent_pos" in current_obs:
                 robot_state = current_obs["agent_pos"]
                 return robot_state[-3:]
@@ -625,7 +625,7 @@ class AutoPickController(InputController):
         if self.ready_to_lift:
             # 新增：提升阶段失败检测
             try:
-                obs = self.env.get_observation()
+                obs = self.env.unwrapped.get_observation()
                 if "environment_state" in obs:
                     env_state = obs["environment_state"]
                     if len(env_state) >= 3:
@@ -703,7 +703,7 @@ class AutoPickController(InputController):
         """检测物体位置"""
         try:
             # 获取当前观测
-            obs = self.env.get_observation()
+            obs = self.env.unwrapped.get_observation()
             
             # 方法1: 如果有environment_state，直接使用（这是物体的位置）
             if "environment_state" in obs:
@@ -714,7 +714,8 @@ class AutoPickController(InputController):
             # 方法2: 如果没有environment_state，尝试从agent_pos推断
             # 这里可以添加更复杂的物体检测逻辑
             # 暂时返回一个固定的目标位置作为示例
-            return [0.5, 0.0, 0.1]  # 示例目标位置
+            else:
+                return self.env.unwrapped._data.sensor("block_pos").data.astype(np.float32)
                 
         except Exception as e:
             print(f"物体检测出错: {e}")
@@ -733,12 +734,12 @@ class AutoPickController(InputController):
         """
         try:
             # 直接调用环境的成功判断方法
-            if hasattr(self.env, '_is_success'):
-                if self.env._is_success():
+            if hasattr(self.env.unwrapped, '_is_success'):
+                if self.env.unwrapped._is_success():
                     return "success"
             
             # 检查是否失败（物体掉落）
-            obs = self.env.get_observation()
+            obs = self.env.unwrapped.get_observation()
             if "environment_state" in obs:
                 env_state = obs["environment_state"]
                 if len(env_state) >= 3:

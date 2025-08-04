@@ -38,7 +38,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         physics_dt: float = 0.002,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
         render_mode: Literal["rgb_array", "human"] = "rgb_array",
-        image_obs: bool = True,
+        image_obs: bool = False,
         reward_type: str = "dense",
         random_block_position: bool = True,
         **kwargs,  # <--- 新增
@@ -73,6 +73,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         env_box = spaces.Box(-np.inf, np.inf, (3,), dtype=np.float32)
 
         if self.image_obs:
+            print("image_obs is True")
             self.observation_space = spaces.Dict(
                 {
                     "pixels": spaces.Dict(
@@ -95,6 +96,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
                 }
             )
         else:
+            print("state_only_obs is True")
             self.observation_space = spaces.Dict(
                 {
                     "agent_pos": agent_box,
@@ -157,7 +159,7 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
     #     print(
     # f"[DEBUG] obs: {type(obs)}, rew: {type(rew)}, terminated: {type(terminated)}, "
     # f"truncated: {type(False)}, info: {type({'succeed': success})}, info['succeed']: {type(success)}")
-        return obs, rew, terminated, False, {"succeed": success}
+        return obs, rew, terminated, False, {"is_success": success}
 
     def _compute_observation(self) -> dict:
         """Compute the current observation."""
@@ -234,6 +236,33 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         dist = np.linalg.norm(block_pos - tcp_pos)
         lift = block_pos[2] - self._z_init
         return lift >= 0.1
+
+    def render(self):
+        """Render the environment.
+        
+        Returns:
+            - For observation: (front_view, wrist_view) - two images for training
+            - For evaluation: single front_view image for video recording
+        """
+        # Get all rendered frames from parent class
+        rendered_frames = super().render()
+        
+        # Check if this is being called for observation (from _compute_observation)
+        # or for evaluation video recording
+        import inspect
+        caller_frame = inspect.currentframe().f_back
+        caller_name = caller_frame.f_code.co_name if caller_frame else ""
+        
+        if caller_name == "_compute_observation":
+            # For observation: return both views
+            if len(rendered_frames) >= 2:
+                return rendered_frames[0], rendered_frames[1]
+            else:
+                # Fallback: return the same image twice if only one camera is available
+                return rendered_frames[0], rendered_frames[0]
+        else:
+            # For evaluation video: return only front view
+            return rendered_frames[0]
 
 
 if __name__ == "__main__":

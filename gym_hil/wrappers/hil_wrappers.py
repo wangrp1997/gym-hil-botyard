@@ -253,8 +253,6 @@ class InputsControlWrapper(gym.Wrapper):
 
         if is_intervention:
             action = gamepad_action
-            print(f"gamepad_action: {gamepad_action}")
-
         # Step the environment
         obs, reward, terminated, truncated, info = self.env.step(action)
 

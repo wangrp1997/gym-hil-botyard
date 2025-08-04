@@ -154,7 +154,7 @@ class FrankaGymEnv(MujocoGymEnv):
         physics_dt: float = 0.002,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
         render_mode: Literal["rgb_array", "human"] = "human",
-        image_obs: bool = True,
+        image_obs: bool = False,
         home_position: np.ndarray = np.asarray((0, -0.785, 0, -2.35, 0, 1.57, np.pi / 4)),  # noqa: B008
         cartesian_bounds: np.ndarray = np.asarray([[0.2, -0.3, 0], [0.6, 0.3, 0.5]]),  # noqa: B008
         gripper_speed_limit: float = 1,  # 夹爪速度限制，值越小闭合越慢
@@ -332,8 +332,8 @@ class FrankaGymEnv(MujocoGymEnv):
 
         for cam_id in self.camera_id:
             self._viewer.update_scene(self.data, camera=cam_id)
-            a = self._viewer.render()
-            rendered_frames.append(self._viewer.render())
+            frame = self._viewer.render()
+            rendered_frames.append(frame)
 
         return rendered_frames
 
